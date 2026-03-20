@@ -1,0 +1,997 @@
+{
+  "id": "TxP_PFAS",
+  "title": "TxP_PFAS Chemotypes Version 1.0.4",
+  "csrml_version": "1",
+  "n_bits": 129,
+  "n_valid": 129,
+  "n_invalid": 0,
+  "bits": [
+    {
+      "id": "txp-pfas-001",
+      "label": "pfas_atom:element_metal_metalloid_CF",
+      "smarts": "[!#6]-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-001.1",
+      "label": "pfas_bond:aromatic_FCc1c",
+      "smarts": "[#9]-[#6;A]-[#6;a]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-002",
+      "label": "pfas_bond:C#N_nitrile_generic_CF",
+      "smarts": "[#6](#[#7])-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-003",
+      "label": "pfas_bond:C(=O)N_carboxamide_(NHR)_C(=O)CF",
+      "smarts": "[#8]=[#6](-[#7](-[#6])-[#1])-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-004",
+      "label": "pfas_bond:C(=O)N_carboxamide_(NR2)_C(=O)CF",
+      "smarts": "[#6]-[#7](-[#6](=[#8])-[#6](-[#9])-*)-[#6]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-005",
+      "label": "pfas_bond:C(=O)N_carboxamide_generic_C(=O)CF",
+      "smarts": "[#8]=[#6](-[#7])-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-006",
+      "label": "pfas_bond:C(=O)O_carboxylicAcid_alkenyl_CF",
+      "smarts": "[#6](-[#8H1;#8])(=[#8])-[#6]=[#6]-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-007",
+      "label": "pfas_bond:C(=O)O_carboxylicAcid_generic_CF",
+      "smarts": "[#6](-[#8H1;#8])(=[#8])-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-008",
+      "label": "pfas_bond:C(=O)O_carboxylicEster_acyclic_C(=O)CF",
+      "smarts": "[#6;!R](-[#6](-[#8]-[#6;!R])=[#8])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-009",
+      "label": "pfas_bond:C(=O)O_carboxylicEster_acyclic_OCCF",
+      "smarts": "[#6;!R]-[#6](-[#8]-[#6;!R]-[#6](-[#9])-*)=[#8]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-010",
+      "label": "pfas_bond:C~Z_CF2CF2-Z",
+      "smarts": "[#6;A](-[#9])(-[#9])-[#6;A](-[#9])(-[#9])-[#8,#16,#15,#7;A]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-011",
+      "label": "pfas_bond:C=N_imine_FCN",
+      "smarts": "[#9]-[#6;A]-[#6;A]=[#7;A]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-012",
+      "label": "pfas_bond:C=O_acyl_halide_CF",
+      "smarts": "[#6](-[#9])(-*)-[#6](-[#9,#53])=[#8]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-013",
+      "label": "pfas_bond:C=O_aldehyde_alkyl_CF",
+      "smarts": "[#6](=[#8])(-[#6;A;X4]-[#6](-[#9])-*)-[#1]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-014",
+      "label": "pfas_bond:C=O_carbonyl_generic_CF",
+      "smarts": "[#6](=[#8])-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-014.1",
+      "label": "pfas_bond:CC(=O)C_dione_(1_3-)_CF",
+      "smarts": "[#6;A](=[#8;A])(-[#6,#7,#8,#15,#16;A])-[#6;A]-[#6;A](-[#6;A]-[#9;A])=[#8;A]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-015",
+      "label": "pfas_bond:CC(=O)C_ketone_alkene_generic_CF",
+      "smarts": "[#6](-[#6])(=[#8])-[#6]=[#6]-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-016",
+      "label": "pfas_bond:CC(=O)C_ketone_generic_CF",
+      "smarts": "[#6](-[#6](-[#6])=[#8])-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-017",
+      "label": "pfas_bond:CN_amine_aliphatic_generic_CF",
+      "smarts": "[#6](-[#6;A;!R]-[#7;X3])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "*(=[!#6;!#1])-[#7]"
+      ]
+    },
+    {
+      "id": "txp-pfas-018",
+      "label": "pfas_bond:CN_amine_pri-NH2_alkyl_CF",
+      "smarts": "[#7;X3](-[#6;A;X4]-[#6](-[#9])-*)(-[#1])-[#1]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-019",
+      "label": "pfas_bond:CN_amine_sec-NH_alkyl_CF",
+      "smarts": "[#7;X3](-[#6])(-[#6;A;X4]-[#6](-[#9])-*)-[#1]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "*=[!#6;!#1]"
+      ]
+    },
+    {
+      "id": "txp-pfas-020",
+      "label": "pfas_bond:CN_amine_ter-N_generic_CF",
+      "smarts": "[#6](-[#6]-[#7](-[#6])-[#6])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "*=[!#6;!#1]"
+      ]
+    },
+    {
+      "id": "txp-pfas-021",
+      "label": "pfas_bond:COC_diether_FCOC(F)C(F)C(F)OC",
+      "smarts": "[#6](-[#8;!R]-[#6;X4](-[#6;X4](-[#6;X4](-[#8;!R]-[#6])-[#9])-[#9])-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-022",
+      "label": "pfas_bond:COC_diether_FCOC(F)C(F)OC",
+      "smarts": "[#6](-[#8;!R]-[#6;X4](-[#6;X4](-[#8;!R]-[#6])-[#9])-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-023",
+      "label": "pfas_bond:COC_diether_FCOC(F)OC",
+      "smarts": "[#6](-[#8;!R]-[#6;X4](-[#8;!R]-[#6])-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-024",
+      "label": "pfas_bond:COC_ether_aliphatic_FCOCF",
+      "smarts": "[#9]-[#6;A;X4](-*)-[#8]-[#6;A;X4]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "*=[!#6;!#1]"
+      ]
+    },
+    {
+      "id": "txp-pfas-025",
+      "label": "pfas_bond:COC_ether_alkenyl_C=CF",
+      "smarts": "[#8](-[#6])-[#6]=[#6]-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "*=[!#6;!#1]"
+      ]
+    },
+    {
+      "id": "txp-pfas-026",
+      "label": "pfas_bond:COC_ether_alkenyl_OCF",
+      "smarts": "[#8](-[#6]-[#9])-[#6]=[#6]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "*=[!#6;!#1]"
+      ]
+    },
+    {
+      "id": "txp-pfas-027",
+      "label": "pfas_bond:COC_ether_FCOC",
+      "smarts": "[#9]-[#6;A]-[#8;A]-[#6;A]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-028",
+      "label": "pfas_bond:COH_alcohol_generic_OCCF",
+      "smarts": "[#6](-[#8;X2]-[#1])-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "*=[!#6;!#1]"
+      ]
+    },
+    {
+      "id": "txp-pfas-029",
+      "label": "pfas_bond:COH_alcohol_pri-alkyl_CF",
+      "smarts": "[#6](-[#6]-[#6;X4]-[#8])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-030",
+      "label": "pfas_bond:COH_alcohol_sec-alkyl_CF",
+      "smarts": "[#6](-[#6](-[#8])-[#6])-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-031",
+      "label": "pfas_bond:COH_alcohol_ter-alkyl_OC(CF)(CF)C",
+      "smarts": "[#6](-[#6](-[#8])(-[#6]-[#9])-[#6])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-032",
+      "label": "pfas_bond:CS_sulfide_CF",
+      "smarts": "[#6](-[#16;X2]-[#6])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-033",
+      "label": "pfas_bond:F~Z_heteroatom",
+      "smarts": "[#9]-[#7,#8,#16,#15,#5]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-034",
+      "label": "pfas_bond:F~Z_heteroatom_S",
+      "smarts": "[#9]-[#16]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-036",
+      "label": "pfas_bond:F~Z_heteroatom_SO2",
+      "smarts": "[#9]-[#16](=[#8])=[#8]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-037",
+      "label": "pfas_bond:NC=O_aminocarbonyl_generic_CF",
+      "smarts": "[#8]=[#6](-[#7])-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-038",
+      "label": "pfas_bond:OZ_oxide_hydroxy_CF",
+      "smarts": "[#8]-*-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-039",
+      "label": "pfas_bond:P=O_phosphate_alkyl_ester_CF",
+      "smarts": "[#15](-[#8])(=[#8])(-[#8])-[#8]-[#6;!R]-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-040",
+      "label": "pfas_bond:P=O_phosphorus_oxo_CF",
+      "smarts": "[#15](=[#8])-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-041",
+      "label": "pfas_bond:PC_phosphorus_organo_generic_CF",
+      "smarts": "[#15](~[#6])-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-042",
+      "label": "pfas_bond:QQ(Q~O_S)_sulfur_oxide_CF",
+      "smarts": "[#16]~[#8]-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#16]~[#6]"
+      ]
+    },
+    {
+      "id": "txp-pfas-043",
+      "label": "pfas_bond:quatN_alkyl_acyclic_CF",
+      "smarts": "[#7](-[#6;!R])(-[#6;!R]-[#6](-[#9])-*)(-[#6;!R])-[#6;!R]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-044",
+      "label": "pfas_bond:S(=O)N_sulfonylamide_SCF",
+      "smarts": "[#16](=[#8])(~[#7])-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-045",
+      "label": "pfas_bond:S(=O)O_sulfonicAcid_acyclic_(chain)_SCF",
+      "smarts": "[#16](=[#8])(=[#8])(-[#8H1;#8])-[#6;!R](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-046",
+      "label": "pfas_bond:S(=O)O_sulfonicEster_acyclic_S-C_(chain)_SCF",
+      "smarts": "[#16](=[#8])(=[#8])(-[#8]-[#6])-[#6;R](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-047",
+      "label": "pfas_bond:S(=O)X_sulfonylhalide_CF",
+      "smarts": "[#6](-*-[#16](=[#8])(=[#8])-[#9,#53])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-048",
+      "label": "pfas_bond:S~N_generic_CF",
+      "smarts": "[#7]~[#16]-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-049",
+      "label": "pfas_bond:S=O_sulfonyl_generic_CF",
+      "smarts": "[#6](-[#16;X4](=[#8])=[#8])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-050",
+      "label": "pfas_bond:S=O_sulfonyl_S_(connect_Z=2)_CF",
+      "smarts": "[#8]=[#16;X4](=[#8])-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-051",
+      "label": "pfas_bond:S=O_sulfoxide_CS(=O)CF",
+      "smarts": "[#9]-[#6;A]-[#16;A](=[#8;A])-[#6;A]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-052",
+      "label": "pfas_bond:X[notF]_CFCX_Br",
+      "smarts": "[#35]-[#6]-[#6]-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-054",
+      "label": "pfas_bond:X[notF]_CFCX_generic",
+      "smarts": "[#53]-[#6]-[#6]-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-055",
+      "label": "pfas_bond:X[notF]_CFCX_I",
+      "smarts": "[#53]-[#6]-[#6]-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-056",
+      "label": "pfas_bond:X[notF]_CFX_Br",
+      "smarts": "[#35]-[#6]-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-057",
+      "label": "pfas_bond:X[notF]_CFX_Cl",
+      "smarts": "[#17]-[#6]-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-058",
+      "label": "pfas_bond:X[notF]_CFX_generic",
+      "smarts": "[#53]-[#6]-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-059",
+      "label": "pfas_bond:X[notF]_CFX_I",
+      "smarts": "[#53]-[#6]-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-060",
+      "label": "pfas_chain:alkaneCyclic_butyl_C4_F",
+      "smarts": "[#6]1(-[#6]-[#6]-[#6]1)-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-061",
+      "label": "pfas_chain:alkaneCyclic_hexyl_C6_F",
+      "smarts": "[#6]1(-[#6]-[#6]-[#6]-[#6]-[#6]1)-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-062",
+      "label": "pfas_chain:alkaneCyclic_pentyl_C5_F",
+      "smarts": "[#6]1(-[#6]-[#6]-[#6]-[#6]1)-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-063",
+      "label": "pfas_chain:alkaneCyclic_propyl_C3_F",
+      "smarts": "[#6]1(-[#6]-[#6]1)-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-064",
+      "label": "pfas_chain:alkeneLinear_mono-ene_ethylene_generic_CF",
+      "smarts": "[#6](-[#6;!R]=[#6;!R])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-064.1",
+      "label": "pfas_chain:alkeneLinear_mono-ene_ethylene_generic_F",
+      "smarts": "[#9]-[#6;A]=[#6;A]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-065",
+      "label": "pfas_chain:alkyne_ethyne_generic_CF",
+      "smarts": "[#6](-[#6]#[#6])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-065.1",
+      "label": "pfas_chain:alkyne_ethyne_generic_F",
+      "smarts": "[#9]-[#6;A]#[#6;A]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-066",
+      "label": "pfas_chain:FT_n1_C=O",
+      "smarts": "[#6](-[#9])(-[#9])(-[#6;!R](-[#1])(-[#1])-[#6]=[#8])-[#6](-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6]"
+      ]
+    },
+    {
+      "id": "txp-pfas-067",
+      "label": "pfas_chain:FT_n1_hetero",
+      "smarts": "[#6](-[#9])(-[#9])(-[#6;!R](-[#1])(-[#1])-[!#6;!#1])-[#6](-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6]"
+      ]
+    },
+    {
+      "id": "txp-pfas-068",
+      "label": "pfas_chain:FT_n1_N",
+      "smarts": "[#6](-[#9])(-[#9])(-[#6;!R](-[#1])(-[#1])-[#7])-[#6](-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6]"
+      ]
+    },
+    {
+      "id": "txp-pfas-069",
+      "label": "pfas_chain:FT_n1_O",
+      "smarts": "[#6](-[#9])(-[#9])(-[#6;!R](-[#1])(-[#1])-[#8])-[#6](-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6]"
+      ]
+    },
+    {
+      "id": "txp-pfas-070",
+      "label": "pfas_chain:FT_n1_OP",
+      "smarts": "[#6](-[#9])(-[#9])(-[#6;!R](-[#1])(-[#1])-[#8]-[#15])-[#6](-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6]"
+      ]
+    },
+    {
+      "id": "txp-pfas-071",
+      "label": "pfas_chain:FT_n1_OS",
+      "smarts": "[#6](-[#9])(-[#9])(-[#6;!R](-[#1])(-[#1])-[#8]-[#16])-[#6](-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6]"
+      ]
+    },
+    {
+      "id": "txp-pfas-072",
+      "label": "pfas_chain:FT_n1_S",
+      "smarts": "[#6](-[#9])(-[#9])(-[#6;!R](-[#1])(-[#1])-[#16])-[#6](-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6]"
+      ]
+    },
+    {
+      "id": "txp-pfas-073",
+      "label": "pfas_chain:FT_n1_X",
+      "smarts": "[#6](-[#9])(-[#9])(-[#6;!R](-[#1])(-[#1])-[#9,#17,#35,#53])-[#6](-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6]"
+      ]
+    },
+    {
+      "id": "txp-pfas-074",
+      "label": "pfas_chain:FT_n2_C=O",
+      "smarts": "[#6](-[#9])(-[#9])(-[#6;!R](-[#1])(-[#1])-[#6;!R](-[#1])(-[#1])-[#6]=[#8])-[#6](-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6]"
+      ]
+    },
+    {
+      "id": "txp-pfas-075",
+      "label": "pfas_chain:FT_n2_hetero",
+      "smarts": "[#6](-[#9])(-[#9])(-[#6;!R](-[#1])(-[#1])-[#6;!R](-[#1])(-[#1])-[!#6;!#1])-[#6](-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6]"
+      ]
+    },
+    {
+      "id": "txp-pfas-076",
+      "label": "pfas_chain:FT_n2_N",
+      "smarts": "[#6](-[#9])(-[#9])(-[#6;!R](-[#1])(-[#1])-[#6;!R](-[#1])(-[#1])-[#7])-[#6](-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6]"
+      ]
+    },
+    {
+      "id": "txp-pfas-077",
+      "label": "pfas_chain:FT_n2_O",
+      "smarts": "[#6](-[#9])(-[#9])(-[#6;!R](-[#1])(-[#1])-[#6;!R](-[#1])(-[#1])-[#8])-[#6](-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6]"
+      ]
+    },
+    {
+      "id": "txp-pfas-078",
+      "label": "pfas_chain:FT_n2_OP",
+      "smarts": "[#6](-[#9])(-[#9])(-[#6;!R](-[#1])(-[#1])-[#6;!R](-[#1])(-[#1])-[#8]-[#15])-[#6](-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6]"
+      ]
+    },
+    {
+      "id": "txp-pfas-079",
+      "label": "pfas_chain:FT_n2_S",
+      "smarts": "[#6](-[#9])(-[#9])(-[#6;!R](-[#1])(-[#1])-[#6;!R](-[#1])(-[#1])-[#16])-[#6](-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6]"
+      ]
+    },
+    {
+      "id": "txp-pfas-080",
+      "label": "pfas_chain:FT_n2_Si",
+      "smarts": "[#6](-[#9])(-[#9])(-[#6;!R](-[#1])(-[#1])-[#6;!R](-[#1])(-[#1])-[#14])-[#6](-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6]"
+      ]
+    },
+    {
+      "id": "txp-pfas-081",
+      "label": "pfas_chain:FT_n2_X",
+      "smarts": "[#6](-[#9])(-[#9])(-[#6;!R](-[#1])(-[#1])-[#6;!R](-[#1])(-[#1])-[#9,#17,#35,#53])-[#6](-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6]"
+      ]
+    },
+    {
+      "id": "txp-pfas-082",
+      "label": "pfas_chain:FT_n3_hetero",
+      "smarts": "[#6](-[#6](-[#9])-[#9])(-[#9])(-[#9])-[#6;!R](-[#6;!R](-[#6;!R](-[#1])(-[#1])-[!#6;!#1])(-[#1])-[#1])(-[#1])-[#1]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6](-[#1])-[#1]"
+      ]
+    },
+    {
+      "id": "txp-pfas-083",
+      "label": "pfas_chain:FT_n3_N",
+      "smarts": "[#6](-[#6](-[#9])-[#9])(-[#9])(-[#9])-[#6;!R](-[#6;!R](-[#6;!R](-[#1])(-[#1])-[#7])(-[#1])-[#1])(-[#1])-[#1]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6](-[#1])-[#1]"
+      ]
+    },
+    {
+      "id": "txp-pfas-085",
+      "label": "pfas_chain:FT_n3_S",
+      "smarts": "[#6](-[#6](-[#9])-[#9])(-[#9])(-[#9])-[#6;!R](-[#6;!R](-[#6;!R](-[#1])(-[#1])-[#16])(-[#1])-[#1])(-[#1])-[#1]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6](-[#1])-[#1]"
+      ]
+    },
+    {
+      "id": "txp-pfas-086",
+      "label": "pfas_chain:perF-branch_CF2C(CF)(CF2)",
+      "smarts": "[#6](-[#9])(-[#9])-[#6](-[#6](-[#9])-[#9])-[#6]-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-087",
+      "label": "pfas_chain:perF-branch_isopropyl",
+      "smarts": "[#6](-[#9])(-[#9])(-[#9])-[#6]-[#6](-[#9])(-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-088",
+      "label": "pfas_chain:perF-branch_isopropyl_CF",
+      "smarts": "[#6](-[#9])(-[#9])(-[#9])-[#6](-[#6](-[#9])(-[#9])-[#9])-[#6]-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-089",
+      "label": "pfas_chain:perF-branch_isopropyl_F",
+      "smarts": "[#6](-[#9])(-[#9])(-[#9])-[#6](-[#6](-[#9])(-[#9])-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-100",
+      "label": "pfas_chain:perF-linear_cap_C1_excl",
+      "smarts": "[#6](-[#9])(-[#9])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6;A](-[#9])-[#9]"
+      ]
+    },
+    {
+      "id": "txp-pfas-104",
+      "label": "pfas_chain:perF-linear_cap_C2_excl",
+      "smarts": "[#6](-[#9])(-[#9])(-[#9])-[#6](-[#9])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6;A](-[#9])-[#9]"
+      ]
+    },
+    {
+      "id": "txp-pfas-105",
+      "label": "pfas_chain:perF-linear_cap_C3_excl",
+      "smarts": "[#6](-[#9])(-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6;A](-[#9])-[#9]"
+      ]
+    },
+    {
+      "id": "txp-pfas-106",
+      "label": "pfas_chain:perF-linear_cap_C4_excl",
+      "smarts": "[#6](-[#9])(-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6;A](-[#9])-[#9]"
+      ]
+    },
+    {
+      "id": "txp-pfas-107",
+      "label": "pfas_chain:perF-linear_cap_C5_excl",
+      "smarts": "[#6](-[#9])(-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6;A](-[#9])-[#9]"
+      ]
+    },
+    {
+      "id": "txp-pfas-108",
+      "label": "pfas_chain:perF-linear_cap_C6_excl_mod",
+      "smarts": "[#6](-[#9])(-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-109",
+      "label": "pfas_chain:perF-linear_cap_C6_plus",
+      "smarts": "[#6](-[#9])(-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-110",
+      "label": "pfas_chain:perF-linear_cap_C7_excl_mod",
+      "smarts": "[#6](-[#9])(-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-111",
+      "label": "pfas_chain:perF-linear_cap_C8_excl_mod",
+      "smarts": "[#6](-[#9])(-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-112",
+      "label": "pfas_chain:perF-linear_cap_C9_excl_mod",
+      "smarts": "[#6](-[#9])(-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-112.1",
+      "label": "pfas_chain:perF-linear_cap_C9_plus",
+      "smarts": "[#6](-[#9])(-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-101",
+      "label": "pfas_chain:perF-linear_cap_C10_excl_mod",
+      "smarts": "[#6](-[#9])(-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-102",
+      "label": "pfas_chain:perF-linear_cap_C11_excl_mod",
+      "smarts": "[#6](-[#9])(-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-103",
+      "label": "pfas_chain:perF-linear_cap_C12_plus",
+      "smarts": "[#6](-[#9])(-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-120",
+      "label": "pfas_chain:perF-linear_nocap_C1_excl",
+      "smarts": "[#9]-[#6;!R](-[#9])(-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6;A](-[#9])-[#9]",
+        "[#6;A](-[#9])-[#9]"
+      ]
+    },
+    {
+      "id": "txp-pfas-124",
+      "label": "pfas_chain:perF-linear_nocap_C2_excl",
+      "smarts": "[#9]-[#6;!R](-[#9])(-[#9])-[#6;!R](-[#9])(-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6;A](-[#9])-[#9]",
+        "[#6;A](-[#9])-[#9]"
+      ]
+    },
+    {
+      "id": "txp-pfas-125",
+      "label": "pfas_chain:perF-linear_nocap_C3_excl",
+      "smarts": "[#9]-[#6;!R](-[#9])(-[#9])-[#6;!R](-[#9])(-[#9])-[#6;!R](-[#9])(-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6;A](-[#9])-[#9]",
+        "[#6;A](-[#9])-[#9]"
+      ]
+    },
+    {
+      "id": "txp-pfas-126",
+      "label": "pfas_chain:perF-linear_nocap_C4_excl",
+      "smarts": "[#9]-[#6;!R](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6;!R](-[#9])(-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6;A](-[#9])-[#9]",
+        "[#6;A](-[#9])-[#9]"
+      ]
+    },
+    {
+      "id": "txp-pfas-127",
+      "label": "pfas_chain:perF-linear_nocap_C5_excl",
+      "smarts": "[#9]-[#6;!R](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6;!R](-[#9])(-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6;A](-[#9])-[#9]",
+        "[#6;A](-[#9])-[#9]"
+      ]
+    },
+    {
+      "id": "txp-pfas-128",
+      "label": "pfas_chain:perF-linear_nocap_C6_excl",
+      "smarts": "[#9]-[#6;!R](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6;!R](-[#9])(-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6;A](-[#9])-[#9]",
+        "[#6;A](-[#9])-[#9]"
+      ]
+    },
+    {
+      "id": "txp-pfas-130",
+      "label": "pfas_chain:perF-linear_C7_plus",
+      "smarts": "*-[#6;!R](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6;!R](-[#9])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-131",
+      "label": "pfas_chain:perF-linear_C8_plus",
+      "smarts": "*-[#6;!R](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6;!R](-[#9])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-133",
+      "label": "pfas_chain:perF-linear_C9_plus",
+      "smarts": "*-[#6;!R](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6](-[#9])(-[#9])-[#6;!R](-[#9])(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-140",
+      "label": "pfas_chain:polyF_cap_CH2FCF",
+      "smarts": "[#6](-[#1])(-[#1])(-[#9])-[#6]-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-141",
+      "label": "pfas_chain:polyF_cap_CHF2CF",
+      "smarts": "[#6](-[#1])(-[#9])(-[#9])-[#6]-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-142",
+      "label": "pfas_chain:polyF_nocap_CFCH2CF",
+      "smarts": "[#6](-[#6](-[#1])(-[#1])-[#6]-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-143",
+      "label": "pfas_chain:polyF_nocap_CFCHFCF",
+      "smarts": "[#6](-[#6](-[#9])(-[#1])-[#6]-[#9])-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-152",
+      "label": "pfas_ring:generic_CF",
+      "smarts": "[#6;R]-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-150",
+      "label": "pfas_ring:aromatic_benzene_CF",
+      "smarts": "[#6]~1(~[#6]~[#6]~[#6]~[#6]~[#6]1)-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-151",
+      "label": "pfas_ring:fused_[5_6]_indane_F",
+      "smarts": "[#6]~1~[#6]2~[#6](~[#6]~[#6]~[#6]1)-[#6](-[#6]-[#6]2)-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-153",
+      "label": "pfas_ring:hetero_[3]_O_epoxide_CF",
+      "smarts": "[#6](-[#6]1-[#8]-[#6]1)(-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-154",
+      "label": "pfas_ring:hetero_[3]_Z_generic_F",
+      "smarts": "[#6]1(-[#7,#8,#16]-[#6]1)-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-155",
+      "label": "pfas_ring:hetero_[5]_Z_1-Z_CF",
+      "smarts": "[#6]~1~[#6]~[#6]~[#7,#8,#16]~[#6]1-[#6](-[#9])-*",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-156",
+      "label": "pfas_ring:hetero_[5]_Z_1-Z_F",
+      "smarts": "[#6]~1~[#6]~[#6]~[#7,#8,#16]~[#6]1-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-157",
+      "label": "pfas_ring:hetero_[6]_Z_1-_CF",
+      "smarts": "[#6]~1(~[#6]~[#6]~[#6]~[#6]~[#7,#8,#16]1)-[#6]-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": "txp-pfas-158",
+      "label": "pfas_ring:hetero_[6]_Z_1-_F",
+      "smarts": "[#6]~1(~[#6]~[#6]~[#6]~[#6]~[#7,#8,#16]1)-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": " txp-pfas-035",
+      "label": "pfas_bond:F~Z_heteroatom_SF",
+      "smarts": "[#9]-[#16]-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": " txp-pfas-053",
+      "label": "pfas_bond:X[notF]_CFCX_Cl",
+      "smarts": "[#17]-[#6]-[#6]-[#9]",
+      "smarts_valid": true,
+      "exception_smarts": []
+    },
+    {
+      "id": " txp-pfas-084",
+      "label": "pfas_chain:FT_n3_O",
+      "smarts": "[#6](-[#6](-[#9])-[#9])(-[#9])(-[#9])-[#6;!R](-[#6;!R](-[#6;!R](-[#1])(-[#1])-[#8])(-[#1])-[#1])(-[#1])-[#1]",
+      "smarts_valid": true,
+      "exception_smarts": [
+        "[#6](-[#1])-[#1]"
+      ]
+    }
+  ]
+}
