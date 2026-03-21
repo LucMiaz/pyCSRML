@@ -1,9 +1,11 @@
 """
-pyToxPrint — Python wrappers for ToxPrint v2.0 and TxP_PFAS v1.0 chemotype fingerprints.
+pyCSRML — Python implementation of CSRML chemotype fingerprints.
+
+ToxPrint v2.0 (729 bits) and TxP_PFAS v1.0.4 (129 bits) definitions are bundled.
 
 Quick start::
 
-    from pyToxPrint import ToxPrintFingerprinter, PFASFingerprinter, EmbeddingSet, from_fingerprinter
+    from pyCSRML import ToxPrintFingerprinter, PFASFingerprinter, EmbeddingSet, from_fingerprinter
     from rdkit import Chem
 
     # --- Single compound ---
@@ -19,12 +21,12 @@ Quick start::
     eset.plot(kind="umap")
 """
 
-from pyToxPrint.fingerprinter import (
+from pyCSRML.fingerprinter import (
     Fingerprinter,
     ToxPrintFingerprinter,
     PFASFingerprinter,
 )
-from pyToxPrint.embedding import (
+from pyCSRML.embedding import (
     Embedding,
     EmbeddingSet,
     from_fingerprinter,

@@ -1,5 +1,5 @@
 """
-Concordance test: compare pyToxPrint PFASFingerprinter output against
+Concordance test: compare pyCSRML PFASFingerprinter output against
 ChemoTyper reference fingerprints from Richard et al. (2023).
 
 Reference files (tests/test_data/):
@@ -18,8 +18,10 @@ import pandas as pd
 import pytest
 from rdkit import Chem
 
+pytestmark = pytest.mark.slow
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from pyToxPrint import PFASFingerprinter
+from pyCSRML import PFASFingerprinter
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -119,7 +121,7 @@ def test_n_bits(fp):
 
 def test_chemotyper_concordance(fp, reference_df, capsys):
     """
-    Compare pyToxPrint fingerprints against ChemoTyper reference.
+    Compare pyCSRML fingerprints against ChemoTyper reference.
 
     Prints a full concordance report.  Asserts that:
       - overall bit accuracy >= 90 %
@@ -138,21 +140,23 @@ def test_chemotyper_concordance(fp, reference_df, capsys):
     tp = ((pred == 1) & (ref == 1)).sum(axis=0)
     fp_count = ((pred == 1) & (ref == 0)).sum(axis=0)
     fn = ((pred == 0) & (ref == 1)).sum(axis=0)
-    precision = np.where(tp + fp_count > 0, tp / (tp + fp_count), np.nan)
-    recall    = np.where(tp + fn > 0,        tp / (tp + fn),        np.nan)
-    f1        = np.where(precision + recall > 0,
-                         2 * precision * recall / (precision + recall), np.nan)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        precision = np.where(tp + fp_count > 0, tp / (tp + fp_count).astype(float), np.nan)
+        recall    = np.where(tp + fn > 0,        tp / (tp + fn).astype(float),        np.nan)
+        f1_denom  = precision + recall
+        f1        = np.where(f1_denom > 0,
+                             2 * precision * recall / f1_denom, np.nan)
 
     # -- Print report --
     with capsys.disabled():
         print(f"\n{'='*65}")
-        print(f"  ChemoTyper concordance report — TxP_PFAS (Richard 2023)")
+        print(f"  ChemoTyper concordance report - TxP_PFAS (Richard 2023)")
         print(f"{'='*65}")
         print(f"  Compounds processed : {n_compounds}  (SMILES failures: {n_failed})")
         print(f"  Bits compared       : {n_bits}")
         print(f"  Overall accuracy    : {overall_acc:.4f}  ({overall_acc*100:.2f} %)")
-        print(f"  Bits ≥ 90% acc.     : {(bit_acc >= 0.90).sum()} / {n_bits}")
-        print(f"  Bits ≥ 70% acc.     : {(bit_acc >= 0.70).sum()} / {n_bits}")
+        print(f"  Bits >= 90% acc.    : {(bit_acc >= 0.90).sum()} / {n_bits}")
+        print(f"  Bits >= 70% acc.    : {(bit_acc >= 0.70).sum()} / {n_bits}")
         print(f"  Cmpds with 100% acc : {(compound_acc == 1).sum()} / {n_compounds}")
         print(f"  Mean cmpd accuracy  : {compound_acc.mean():.4f}")
         print()
@@ -165,7 +169,7 @@ def test_chemotyper_concordance(fp, reference_df, capsys):
             p = f"{precision[i]:.3f}" if not np.isnan(precision[i]) else "  N/A"
             r = f"{recall[i]:.3f}"    if not np.isnan(recall[i])    else "  N/A"
             f = f"{f1[i]:.3f}"        if not np.isnan(f1[i])        else "  N/A"
-            flag = " ← WORST" if i == order[0] else ""
+            flag = " << WORST" if i == order[0] else ""
             print(f"  {bit_names[i]:<60} {bit_acc[i]:.3f}  {p:>5}  {r:>5}  {f:>5}{flag}")
 
         print(f"{'='*65}\n")
@@ -177,7 +181,7 @@ def test_chemotyper_concordance(fp, reference_df, capsys):
     )
     pct_bits_above_70 = (bit_acc >= 0.70).mean()
     assert pct_bits_above_70 >= 0.90, (
-        f"Only {pct_bits_above_70*100:.1f}% of bits have ≥70% accuracy "
+        f"Only {pct_bits_above_70*100:.1f}% of bits have >=70% accuracy "
         f"(threshold: 90% of bits)."
     )
 

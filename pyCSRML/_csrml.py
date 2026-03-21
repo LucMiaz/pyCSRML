@@ -2,10 +2,6 @@
 Parse CSRML (Chemical Subgraph Representation Markup Language) XML files
 (ToxPrint v2 and TxP_PFAS v1) and convert subgraph patterns to SMARTS strings.
 
-CSRML versions handled:
-  - csrmlVersion="2" (ToxPrint v2.0): substructureMatch + substructureException molecules
-  - csrmlVersion="1" (TxP_PFAS v1.0): single substructureMatch + mustMatch/mustNotMatch test cases
-
 Key simplifications:
   - substructureException patterns are approximated or skipped (→ minor false positives)
   - `matchingQueryAtom` cross-references between exception and main molecules are ignored
@@ -70,6 +66,176 @@ def _text(el, path: str, default: str = "") -> str:
 
 
 # ---------------------------------------------------------------------------
+# combineAtomFeatures → SMARTS helpers
+# ---------------------------------------------------------------------------
+
+
+def _hetero_attached_count_smarts(atomic_num: Optional[int], data: dict) -> list:
+    """
+    Return recursive SMARTS AND-fragments for an ``atomHeteroAttachedCount``
+    matchIf constraint.
+
+    Heteroatoms are defined as [!#6;!#1] (non-C, non-H).
+    Generates:
+      * ``$([elem](~[!#6;!#1])...)`` for a lower-bound (minInclusive)
+      * ``!$([elem](~[!#6;!#1])...)`` for an upper-bound (maxInclusive)
+
+    For an exact count (min == max == n) this produces:
+      ``$([#16](~[!#6;!#1])(~[!#6;!#1]))``   — at least n heteroatom neighbours
+      ``!$([#16](~[!#6;!#1])(~[!#6;!#1])(~[!#6;!#1]))``  — not n+1 or more
+
+    This cannot yet be expressed as a plain SMARTS primitive, hence the
+    recursive-SMARTS approach.
+    """
+    min_incl = data.get("mininclusive")
+    max_incl = data.get("maxinclusive")
+    val = (data.get("values") or [None])[0] or data.get("value") or data.get("count")
+    if val is not None:
+        min_incl = val
+        max_incl = val
+
+    if not min_incl and not max_incl:
+        return []
+
+    elem = f"#{atomic_num}" if atomic_num is not None else "*"
+    hetero = "[!#6;!#1]"
+    parts: list[str] = []
+
+    if min_incl:
+        n = int(min_incl)
+        if n > 0:
+            args = "".join(f"(~{hetero})" for _ in range(n))
+            parts.append(f"$([{elem}]{args})")
+
+    if max_incl:
+        n = int(max_incl)
+        args = "".join(f"(~{hetero})" for _ in range(n + 1))
+        parts.append(f"!$([{elem}]{args})")
+
+    return parts
+
+def _h_range_smarts(data: dict) -> str:
+    """Convert an attachedHydrogenCount data dict to a SMARTS H-constraint string."""
+    val = data.get("count") or data.get("value") or (data.get("values") or [None])[0]
+    if val is not None:
+        return f"H{val.strip()}"
+    min_incl = data.get("mininclusive")
+    min_excl = data.get("minexclusive")
+    max_incl = data.get("maxinclusive")
+    if min_incl:
+        n = int(min_incl)
+        return "!H0" if n <= 1 else ";" .join(f"!H{i}" for i in range(n))
+    if min_excl:
+        n = int(min_excl)  # > n  →  >= n+1
+        return "!H0" if n == 0 else ";".join(f"!H{i}" for i in range(n + 1))
+    if max_incl:
+        n = int(max_incl)
+        return ",".join(f"H{i}" for i in range(n + 1))
+    return ""
+
+
+def _xconn_smarts(data: dict) -> str:
+    """Convert a connectivity data dict to a SMARTS X-constraint string."""
+    val = data.get("count") or data.get("value") or (data.get("values") or [None])[0]
+    if val is not None:
+        return f"X{val.strip()}"
+    return ""
+
+
+def _leaf_to_smarts_piece(feat: str, data: dict) -> str:
+    """Convert a leaf matchIf feature to its SMARTS fragment (no brackets)."""
+    if feat == "atomList":
+        negate = data.get("negate") == "true"
+        parts = []
+        for v in data.get("values", []):
+            n = _atomic_num(v)
+            if n is not None:
+                parts.append(f"#{n}")
+        if not parts:
+            return ""
+        if negate:
+            return ";".join(f"!{p}" for p in parts)
+        return ",".join(parts)
+    if feat == "aliphaticAtom":
+        return "A"
+    if feat == "aromaticAtom":
+        return "a"
+    if feat == "attachedHydrogenCount":
+        return _h_range_smarts(data)
+    if feat == "connectivity":
+        return _xconn_smarts(data)
+    if feat in ("ringAtom", "ringCountAtom"):
+        negate = data.get("negate") == "true"
+        val = (data.get("values") or [None])[0] or data.get("value")
+        prefix = "!" if negate else ""
+        return f"{prefix}R{val.strip()}" if val else f"{prefix}R"
+    if feat == "chainAtom":
+        negate = data.get("negate") == "true"
+        return "R" if negate else "!R"
+    return ""
+
+
+def _and_group_to_terms(children: list) -> list:
+    """
+    Process an AND-group of leaf nodes into a list of OR-alternative terms.
+    An atomList with multiple values expands into multiple alternatives,
+    each carrying the other AND constraints as a semicolon-joined suffix.
+    """
+    atomic_bases: list[str] = []
+    and_parts: list[str] = []
+
+    for child in children:
+        if child["type"] == "combine":
+            # Nested combine inside and-group; recurse and collect
+            inner = _combine_node_to_smarts(child)
+            if inner:
+                and_parts.append(inner)
+            continue
+        feat = child["feature"]
+        data = child["data"]
+        if feat == "atomList":
+            negate = data.get("negate") == "true"
+            for v in data.get("values", []):
+                n = _atomic_num(v)
+                if n is not None:
+                    atomic_bases.append((f"!#{n}" if negate else f"#{n}"))
+        else:
+            piece = _leaf_to_smarts_piece(feat, data)
+            if piece:
+                and_parts.append(piece)
+
+    suffix = (";".join(and_parts)) if and_parts else ""
+    if not atomic_bases:
+        return [suffix] if suffix else []
+    return [f"{b};{suffix}" if suffix else b for b in atomic_bases]
+
+
+def _combine_node_to_smarts(node: dict) -> str:
+    """Convert a combineAtomFeatures node into SMARTS atom content (no brackets)."""
+    if node["type"] == "leaf":
+        return _leaf_to_smarts_piece(node["feature"], node["data"])
+
+    combine_by = node["combineBy"]
+    if combine_by == "or":
+        all_terms: list[str] = []
+        for child in node["children"]:
+            if child["type"] == "combine" and child["combineBy"] == "and":
+                all_terms.extend(_and_group_to_terms(child["children"]))
+            elif child["type"] == "leaf":
+                piece = _leaf_to_smarts_piece(child["feature"], child["data"])
+                if piece:
+                    # atomList inside OR expands naturally
+                    all_terms.extend(piece.split(","))
+            else:
+                inner = _combine_node_to_smarts(child)
+                if inner:
+                    all_terms.extend(inner.split(","))
+        return ",".join(t for t in all_terms if t)
+    else:  # and
+        return ";".join(_and_group_to_terms(node["children"]))
+
+
+# ---------------------------------------------------------------------------
 # Atom → SMARTS primitive
 # ---------------------------------------------------------------------------
 
@@ -77,12 +243,15 @@ def _text(el, path: str, default: str = "") -> str:
 _SPECIAL_ELEMENTS = {
     # wildcard / any atom
     "*": "*",
-    # heteroatom (non-C, non-H) – SMARTS: !#6;!#1
+    # heteroatom (non-C, non-H)
     "Q": "[!#6;!#1]",
+    # Z = heteroatom (same logical scope as Q in TxP_PFAS)
+    "Z": "[!#6;!#1]",
     # any halogen
     "X": "[#9,#17,#35,#53]",  # F, Cl, Br, I
-    # explicitly used as "any atom except"
-    "G": "[!#6]",  # generic; context-dependent – used for metals/metalloids
+    # G = metal / metalloid: B(5), Si(14), Ge(32), As(33), Sb(51), Te(52)
+    # Derived from mustMatch test cases in txp-pfas-001.
+    "G": "[#5,#14,#32,#33,#51,#52]",
 }
 
 _BOND_SMARTS = {
@@ -95,26 +264,71 @@ _BOND_SMARTS = {
 }
 
 
+def _parse_range_data(mif_el) -> dict:
+    """Extract range attributes (minInclusive, maxInclusive, minExclusive, maxExclusive)
+    from a matchIf element that contains a <range> sub-element."""
+    data: dict = {}
+    range_el = mif_el.find("csrml:range", NS)
+    if range_el is None:
+        return data
+    for child in range_el:
+        tag = _tag(child).lower()  # mininclusive / maxinclusive / minexclusive / maxexclusive
+        val = (child.text or "").strip()
+        if val:
+            data[tag] = val
+    return data
+
+
+def _parse_matchif_node(mif_el) -> dict:
+    """
+    Recursively parse a <matchIf> element into a structured node.
+    Returns either:
+      {'type': 'leaf',    'feature': str, 'data': dict}
+      {'type': 'combine', 'combineBy': str, 'children': list}
+    """
+    feat = mif_el.get("feature", "")
+    if feat == "combineAtomFeatures":
+        combine_by = (mif_el.get("combineBy") or "and").lower()
+        children = [_parse_matchif_node(c) for c in mif_el.findall("csrml:matchIf", NS)]
+        return {"type": "combine", "combineBy": combine_by, "children": children}
+
+    # Leaf node
+    data: dict = {}
+    for attr in ("value", "min", "max", "count", "id", "combineBy", "negate"):
+        v = mif_el.get(attr)
+        if v is not None:
+            data[attr] = v
+    vals = [v.text.strip() for v in mif_el.findall("csrml:value", NS) if v.text]
+    if vals:
+        data["values"] = vals
+    data.update(_parse_range_data(mif_el))
+    return {"type": "leaf", "feature": feat, "data": data}
+
+
 def _parse_atom_matchifs(atom_el) -> dict:
     """
     Return a dict of matchIf feature → data for a CSRML atom element.
-    Data is a dict with keys: 'values' (list of str), and attribute keys
-    (value, min, max, count, id) if present.
+    For combineAtomFeatures, the value is the structured node from
+    _parse_matchif_node instead of a flat data dict.
     """
     result = {}
     for mif in atom_el.findall("csrml:matchIf", NS):
         feat = mif.get("feature", "")
         if not feat:
             continue
-        data = {}
-        for attr in ("value", "min", "max", "count", "id", "combineBy"):
-            v = mif.get(attr)
-            if v is not None:
-                data[attr] = v
-        vals = [v.text.strip() for v in mif.findall("csrml:value", NS) if v.text]
-        if vals:
-            data["values"] = vals
-        result[feat] = data
+        if feat == "combineAtomFeatures":
+            result[feat] = _parse_matchif_node(mif)
+        else:
+            data: dict = {}
+            for attr in ("value", "min", "max", "count", "id", "combineBy", "negate"):
+                v = mif.get(attr)
+                if v is not None:
+                    data[attr] = v
+            vals = [v.text.strip() for v in mif.findall("csrml:value", NS) if v.text]
+            if vals:
+                data["values"] = vals
+            data.update(_parse_range_data(mif))
+            result[feat] = data
     return result
 
 
@@ -126,6 +340,31 @@ def _atom_to_smarts(element: Optional[str], matchifs: dict) -> str:
     element = element or ""
     parts_and: list[str] = []  # AND-conditions
     parts_or: list[str] = []   # OR-conditions (atomList)
+    _atom_num: Optional[int] = None  # filled when element is a real element
+
+    # --- combineAtomFeatures: QRY atoms with recursive feature combinations ---
+    if element == "QRY" and "combineAtomFeatures" in matchifs:
+        inner = _combine_node_to_smarts(matchifs["combineAtomFeatures"])
+        # Append recursive negations (from matchingQueryAtom folding) if present
+        neg_parts = []
+        if "recursive_negation" in matchifs:
+            for exc_s in matchifs["recursive_negation"].get("values", []):
+                if exc_s:
+                    neg_parts.append(f"!$({exc_s})")
+        if neg_parts:
+            # Wrap each OR term with the negations
+            terms = inner.split(",") if inner else ["*"]
+            neg_suffix = ";".join(neg_parts)
+            combined = ",".join(f"{t};{neg_suffix}" for t in terms)
+            return f"[{combined}]"
+        if not inner:
+            return "*"
+        # Use recursive SMARTS [$([A]),$([B]),...] for multi-term OR to avoid
+        # RDKit parse ambiguity where [X<n>,#<n>...] is misread as an X-range.
+        terms = inner.split(",")
+        if len(terms) > 1:
+            inner = ",".join(f"$([{t}])" for t in terms)
+        return f"[{inner}]"
 
     # --- Base element ---
     if element == "*" or not element:
@@ -144,9 +383,9 @@ def _atom_to_smarts(element: Optional[str], matchifs: dict) -> str:
         # Defined entirely by matchIf; start with nothing (wildcard)
         pass
     else:
-        n = _atomic_num(element)
-        if n is not None:
-            parts_and.append(f"#{n}")
+        _atom_num = _atomic_num(element)
+        if _atom_num is not None:
+            parts_and.append(f"#{_atom_num}")
         else:
             parts_and.append("*")  # unknown element → wildcard
 
@@ -158,17 +397,16 @@ def _atom_to_smarts(element: Optional[str], matchifs: dict) -> str:
 
     # --- Hydrogen count ---
     if "attachedHydrogenCount" in matchifs:
-        d = matchifs["attachedHydrogenCount"]
-        hval = d.get("count") or d.get("value") or (d.get("values") or [None])[0]
-        if hval is not None:
-            parts_and.append(f"H{hval}")
+        piece = _h_range_smarts(matchifs["attachedHydrogenCount"])
+        if piece:
+            # May be compound (several ';'-joined parts or a single piece)
+            parts_and.extend(piece.split(";"))
 
     # --- Connectivity (total degree) ---
     if "connectivity" in matchifs:
-        d = matchifs["connectivity"]
-        cval = d.get("count") or d.get("value") or (d.get("values") or [None])[0]
-        if cval is not None:
-            parts_and.append(f"X{cval}")
+        piece = _xconn_smarts(matchifs["connectivity"])
+        if piece:
+            parts_and.append(piece)
 
     # --- Formal charge ---
     if "atomicFormalCharge" in matchifs:
@@ -183,9 +421,11 @@ def _atom_to_smarts(element: Optional[str], matchifs: dict) -> str:
 
     # --- Ring membership ---
     if "ringAtom" in matchifs:
-        parts_and.append("R")
+        negate = matchifs["ringAtom"].get("negate") == "true"
+        parts_and.append("!R" if negate else "R")
     elif "chainAtom" in matchifs:
-        parts_and.append("!R")
+        negate = matchifs["chainAtom"].get("negate") == "true"
+        parts_and.append("R" if negate else "!R")
 
     # --- Valency ---
     if "valency" in matchifs:
@@ -195,25 +435,33 @@ def _atom_to_smarts(element: Optional[str], matchifs: dict) -> str:
             parts_and.append(f"v{vval}")
 
     # --- Heteroatom attached count ---
+    # Expressed as recursive SMARTS: $([elem](~[!#6;!#1])...) / !$(...)
     if "atomHeteroAttachedCount" in matchifs:
-        d = matchifs["atomHeteroAttachedCount"]
-        hac = d.get("count") or d.get("value") or (d.get("values") or [None])[0]
-        # In SMARTS no direct equivalent; skip
+        for frag in _hetero_attached_count_smarts(_atom_num, matchifs["atomHeteroAttachedCount"]):
+            parts_and.append(frag)
 
-    # --- atomList (OR of elements) ---
+    # --- Ring count ---
+    if "ringCountAtom" in matchifs:
+        d = matchifs["ringCountAtom"]
+        rval = (d.get("values") or [None])[0] or d.get("value")
+        parts_and.append(f"R{rval.strip()}" if rval else "R")
+
+    # --- atomList (OR of elements, possibly negated) ---
     if "atomList" in matchifs:
-        vals = matchifs["atomList"].get("values", [])
+        d = matchifs["atomList"]
+        negate = d.get("negate") == "true"
+        vals = d.get("values", [])
         for v in vals:
             if v.startswith("#"):
-                parts_or.append(v)
+                target = v
             else:
-                # Some values have SMARTS-like notation (e.g., '#8H1' = O-H)
-                if any(c.isalpha() for c in v[1:]):
-                    # Complex value; skip
-                    continue
                 n = _atomic_num(v)
-                if n is not None:
-                    parts_or.append(f"#{n}")
+                target = f"#{n}" if n is not None else None
+            if target:
+                if negate:
+                    parts_and.append(f"!{target}")
+                else:
+                    parts_or.append(target)
 
     # --- excludeAtomList (NOT of elements) ---
     if "excludeAtomList" in matchifs:
@@ -222,6 +470,12 @@ def _atom_to_smarts(element: Optional[str], matchifs: dict) -> str:
             n = _atomic_num(v)
             if n is not None:
                 parts_and.append(f"!#{n}")
+
+    # --- Recursive negations injected from matchingQueryAtom folding ---
+    if "recursive_negation" in matchifs:
+        for exc_smarts in matchifs["recursive_negation"].get("values", []):
+            if exc_smarts:
+                parts_and.append(f"!$({exc_smarts})")
 
     # --- Assemble ---
     # If only wildcard, return simple form
@@ -266,7 +520,11 @@ def _bond_char(order: str) -> str:
     return _BOND_SMARTS.get(order, "~")
 
 
-def _graph_to_smarts(atoms: dict, bonds: list[tuple]) -> Optional[str]:
+def _graph_to_smarts(
+    atoms: dict,
+    bonds: list[tuple],
+    start: Optional[str] = None,
+) -> Optional[str]:
     """
     Build a SMARTS string for a small query graph.
 
@@ -275,6 +533,8 @@ def _graph_to_smarts(atoms: dict, bonds: list[tuple]) -> Optional[str]:
     atoms : dict
         Mapping atom_id → {'element': str, 'matchifs': dict}
     bonds : list of (atom_id1, atom_id2, order_str)
+    start : str, optional
+        Atom id to use as the DFS root. Defaults to the first atom in the dict.
     """
     if not atoms:
         return None
@@ -286,7 +546,7 @@ def _graph_to_smarts(atoms: dict, bonds: list[tuple]) -> Optional[str]:
         adj[a2].append((a1, order))
 
     atom_ids = list(atoms.keys())
-    start = atom_ids[0]
+    start = start if start is not None else atom_ids[0]
 
     # ---- Two-pass ring-closure detection ----
     # Pass 1: DFS to find tree edges and back edges
@@ -446,6 +706,49 @@ def parse_subgraph(sg_el) -> dict:
         elif feat == "substructureException":
             exception_mols.append(parsed)
 
+    # --- fold matchingQueryAtom exceptions into the main pattern ---
+    # These are exceptions where one atom has matchingQueryAtom=<main_id>,
+    # meaning "at the matched position of <main_id>, the exception condition
+    # must NOT hold". We express this as a recursive SMARTS negation [!$(...)].
+    remaining_exceptions: list[dict] = []
+    if match_mol is not None:
+        for exc_mol in exception_mols:
+            anchor_pairs = [
+                (aid, info)
+                for aid, info in exc_mol["atoms"].items()
+                if "matchingQueryAtom" in info["matchifs"]
+            ]
+            if not anchor_pairs:
+                remaining_exceptions.append(exc_mol)
+                continue
+
+            folded_all = True
+            for exc_anchor_id, exc_anchor_info in anchor_pairs:
+                main_ref_id = (
+                    exc_anchor_info["matchifs"]["matchingQueryAtom"]
+                    .get("values", [None])[0]
+                )
+                if main_ref_id is None or main_ref_id not in match_mol["atoms"]:
+                    folded_all = False
+                    break
+
+                # Build SMARTS for the exception rooted at the anchor atom
+                exc_smarts = _graph_to_smarts(
+                    exc_mol["atoms"], exc_mol["bonds"], start=exc_anchor_id
+                )
+                if exc_smarts is None:
+                    folded_all = False
+                    break
+
+                # Inject negation into the main-pattern atom
+                main_atom = match_mol["atoms"][main_ref_id]
+                neg_d = main_atom["matchifs"].setdefault("recursive_negation", {"values": []})
+                neg_d["values"].append(exc_smarts)
+
+            if not folded_all:
+                remaining_exceptions.append(exc_mol)
+        exception_mols = remaining_exceptions
+
     smarts: Optional[str] = None
     exception_smarts: list[str] = []
 
@@ -500,7 +803,6 @@ def parse_csrml_xml(xml_path: str) -> dict:
     {
       'id': str,
       'version': str,
-      'csrml_version': str,
       'title': str,
       'description': str,
       'hierarchy': list,         # nested class hierarchy
@@ -512,7 +814,7 @@ def parse_csrml_xml(xml_path: str) -> dict:
     root = tree.getroot()
 
     doc_id = root.get("id", "")
-    csrml_version = root.get("csrmlVersion", "")
+    csrml_version = root.get("csrmlVersion", "1")
     title = _text(root, "csrml:title")
     description = _text(root, "csrml:description")
 

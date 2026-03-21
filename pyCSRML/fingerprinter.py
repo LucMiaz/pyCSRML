@@ -96,24 +96,56 @@ def _compile_smarts(smarts: str):
 # Load/build fingerprint spec
 # ---------------------------------------------------------------------------
 
-def _load_spec(json_path: Optional[Path], xml_path: Path) -> dict:
+
+def _normalise_spec(raw: dict) -> dict:
     """
-    Load fingerprint spec from JSON cache if available and up-to-date,
-    otherwise parse the XML and (optionally) save JSON.
+    Accept both the flat list format ``[{id, label, smarts, ...}, ...]`` and
+    the wrapper dict format ``{"bits": [...], "id": ..., "title": ...}``.
+    Always returns the wrapper dict format.
     """
-    if json_path and json_path.exists():
-        # Check freshness
-        if not xml_path.exists() or json_path.stat().st_mtime >= xml_path.stat().st_mtime:
-            with open(json_path, encoding="utf-8") as f:
+    if isinstance(raw, list):
+        return {"id": "", "title": "", "csrml_version": "", "n_bits": len(raw), "bits": raw}
+    if "bits" not in raw:
+        raise ValueError(
+            "JSON/YAML fingerprint spec must be a list of bit dicts or a dict with a 'bits' key."
+        )
+    return raw
+
+
+def _load_from_json(path: Path) -> dict:
+    """Load a fingerprint spec from a JSON file."""
+    with open(path, encoding="utf-8") as f:
+        return _normalise_spec(json.load(f))
+
+
+def _load_from_yaml(path: Path) -> dict:
+    """Load a fingerprint spec from a YAML file (requires PyYAML)."""
+    try:
+        import yaml  # noqa: PLC0415
+    except ImportError as exc:
+        raise ImportError(
+            "PyYAML is required to load YAML fingerprint definitions. "
+            "Install it with: pip install pyyaml"
+        ) from exc
+    with open(path, encoding="utf-8") as f:
+        return _normalise_spec(yaml.safe_load(f))
+
+
+def _load_from_xml(xml_path: Path, json_cache: Optional[Path]) -> dict:
+    """
+    Parse a CSRML XML file; use / populate a JSON cache when provided.
+    """
+    if json_cache and json_cache.exists():
+        if not xml_path.exists() or json_cache.stat().st_mtime >= xml_path.stat().st_mtime:
+            with open(json_cache, encoding="utf-8") as f:
                 return json.load(f)
 
     # Parse XML
-    from pyToxPrint._csrml import parse_csrml_xml, ordered_bit_list
+    from pyCSRML._csrml import parse_csrml_xml, ordered_bit_list  # noqa: PLC0415
 
     parsed = parse_csrml_xml(str(xml_path))
     bit_order = ordered_bit_list(parsed)
 
-    # Build flat spec: list of bit dicts
     bits = []
     for bit_id in bit_order:
         sg = parsed["subgraph_index"].get(bit_id)
@@ -136,16 +168,27 @@ def _load_spec(json_path: Optional[Path], xml_path: Path) -> dict:
         "bits": bits,
     }
 
-    # Save JSON for next time
-    if json_path:
+    if json_cache:
         try:
-            json_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(json_path, "w", encoding="utf-8") as f:
+            json_cache.parent.mkdir(parents=True, exist_ok=True)
+            with open(json_cache, "w", encoding="utf-8") as f:
                 json.dump(spec, f, ensure_ascii=False, indent=2)
-        except Exception:
+        except Exception:  # noqa: BLE001
             pass
 
     return spec
+
+
+def _load_spec(source: Path, json_cache: Optional[Path]) -> dict:
+    """
+    Load a fingerprint spec from *source*, which may be an XML, JSON, or YAML file.
+    """
+    suffix = source.suffix.lower()
+    if suffix == ".json":
+        return _load_from_json(source)
+    if suffix in (".yaml", ".yml"):
+        return _load_from_yaml(source)
+    return _load_from_xml(source, json_cache)
 
 
 # ---------------------------------------------------------------------------
@@ -154,31 +197,42 @@ def _load_spec(json_path: Optional[Path], xml_path: Path) -> dict:
 
 class Fingerprinter:
     """
-    Compute binary chemotype fingerprints from a CSRML XML definition file.
+    Compute binary chemotype fingerprints from a CSRML fingerprint definition.
+
+    The definition file can be in any of these formats:
+
+    * **XML** (``.xml``) — a CSRML XML file (ToxPrint v2 or TxP_PFAS).  The
+      parser converts the subgraph patterns to SMARTS on the fly.  An optional
+      JSON cache speeds up subsequent loads.
+    * **JSON** (``.json``) — a pre-built spec file (see
+      :doc:`../json_yaml_format` for the schema).
+    * **YAML** (``.yaml`` / ``.yml``) — same schema as JSON but in YAML
+      syntax.  Requires ``pyyaml``.
 
     Parameters
     ----------
-    xml_path : str or Path
-        Path to the CSRML XML file.
+    source : str or Path
+        Path to the fingerprint definition file (.xml, .json, .yaml, or .yml).
     json_cache : str or Path, optional
-        Path to a JSON cache file. If None, no caching is used.
+        Path to a JSON cache file.  Only used when *source* is an XML file.
+        If the cache is newer than the XML, it is loaded directly (faster).
     verbose : bool
-        If True, warn about patterns that fail to compile.
+        If True, emit a warning for every pattern that fails to compile.
     """
 
     def __init__(
         self,
-        xml_path: Union[str, Path],
+        source: Union[str, Path],
         json_cache: Optional[Union[str, Path]] = None,
         verbose: bool = False,
     ):
         if not _HAS_RDKIT:
             raise ImportError("RDKit is required for fingerprint computation.")
 
-        self._xml_path = Path(xml_path)
+        self._source = Path(source)
         self._json_cache = Path(json_cache) if json_cache else None
         self._verbose = verbose
-        self._spec = _load_spec(self._json_cache, self._xml_path)
+        self._spec = _load_spec(self._source, self._json_cache)
         self._bits = self._spec["bits"]
         self._n_bits = len(self._bits)
 
@@ -249,13 +303,17 @@ class Fingerprinter:
         if mol is None:
             return np.zeros(self._n_bits, dtype=bool), self.bit_names
 
+        # Add explicit Hs so that SMARTS patterns with [#1] (e.g. CH2 groups
+        # in fluorotelomer chains) and [#8;X2] (OH groups) match correctly.
+        mol_h = Chem.AddHs(mol)
+
         arr = np.zeros(self._n_bits, dtype=bool)
         for i, (main_q, exc_qs) in enumerate(self._queries):
             if main_q is None:
                 continue
-            if mol.HasSubstructMatch(main_q):
+            if mol_h.HasSubstructMatch(main_q):
                 # Check exceptions
-                hit = all(not mol.HasSubstructMatch(eq) for eq in exc_qs) if exc_qs else True
+                hit = all(not mol_h.HasSubstructMatch(eq) for eq in exc_qs) if exc_qs else True
                 arr[i] = hit
         return arr, self.bit_names
 
@@ -303,35 +361,41 @@ class ToxPrintFingerprinter(Fingerprinter):
 
     Parameters
     ----------
-    xml_path : str or Path, optional
-        Custom path to the ToxPrint XML. Defaults to the bundled file.
+    source : str or Path, optional
+        Path to a ToxPrint definition file (.xml, .json, or .yaml).
+        Defaults to the bundled ToxPrint v2.0 XML and its pre-built JSON cache.
     """
 
     def __init__(
         self,
-        xml_path: Optional[Union[str, Path]] = None,
+        source: Optional[Union[str, Path]] = None,
         verbose: bool = False,
+        # backward-compat alias
+        xml_path: Optional[Union[str, Path]] = None,
     ):
-        xp = Path(xml_path) if xml_path else _TOXPRINT_XML
-        jp = _TOXPRINT_JSON
-        super().__init__(xml_path=xp, json_cache=jp, verbose=verbose)
+        src = Path(source or xml_path or _TOXPRINT_XML)
+        jp = _TOXPRINT_JSON if src == _TOXPRINT_XML else None
+        super().__init__(source=src, json_cache=jp, verbose=verbose)
 
 
 class PFASFingerprinter(Fingerprinter):
     """
-    TxP_PFAS v1.0 fingerprinter (129 PFAS-specific chemotype bits).
+    TxP_PFAS v1.0.4 fingerprinter (129 PFAS-specific chemotype bits).
 
     Parameters
     ----------
-    xml_path : str or Path, optional
-        Custom path to the TxP_PFAS XML. Defaults to the bundled file.
+    source : str or Path, optional
+        Path to a TxP_PFAS definition file (.xml, .json, or .yaml).
+        Defaults to the bundled TxP_PFAS v1.0.4 XML and its pre-built JSON cache.
     """
 
     def __init__(
         self,
-        xml_path: Optional[Union[str, Path]] = None,
+        source: Optional[Union[str, Path]] = None,
         verbose: bool = False,
+        # backward-compat alias
+        xml_path: Optional[Union[str, Path]] = None,
     ):
-        xp = Path(xml_path) if xml_path else _TXPPFAS_XML
-        jp = _TXPPFAS_JSON
-        super().__init__(xml_path=xp, json_cache=jp, verbose=verbose)
+        src = Path(source or xml_path or _TXPPFAS_XML)
+        jp = _TXPPFAS_JSON if src == _TXPPFAS_XML else None
+        super().__init__(source=src, json_cache=jp, verbose=verbose)

@@ -1,0 +1,6 @@
+sphinx>=7
+sphinx-rtd-theme>=2
+sphinx-autodoc-typehints
+myst-parser
+# optional: needed to document optional-import modules without ImportError
+numpy

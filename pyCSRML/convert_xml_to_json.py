@@ -52,7 +52,7 @@ try:
 except ImportError:
     _HAS_RDKIT = False
 
-from pyToxPrint._csrml import parse_csrml_xml, ordered_bit_list
+from pyCSRML._csrml import parse_csrml_xml, ordered_bit_list
 
 DATA_DIR = script_dir / "data"
 

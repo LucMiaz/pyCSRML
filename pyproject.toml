@@ -1,0 +1,141 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# ---------------------------------------------------------------------------
+# Project metadata
+# ---------------------------------------------------------------------------
+[project]
+name = "pyCSRML"
+version = "0.1.0"
+description = "Python implementation of CSRML chemotype fingerprints (ToxPrint v2 and TxP_PFAS v1)"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+authors = [
+  { name = "Luc Miaz", email = "" },
+]
+keywords = [
+  "cheminformatics", "PFAS", "fingerprint", "SMARTS", "CSRML",
+  "ToxPrint", "chemotype", "RDKit",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering :: Chemistry",
+  "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+
+# Core runtime dependencies
+dependencies = [
+  "numpy>=1.23",
+  "rdkit>=2022.3",
+]
+
+[project.optional-dependencies]
+# richer analysis / visualisation
+analysis = [
+  "pandas>=1.5",
+  "matplotlib>=3.6",
+]
+# dimensionality-reduction for EmbeddingSet.umap()
+umap = [
+  "umap-learn>=0.5",
+]
+# YAML support for Fingerprinter
+yaml = [
+  "pyyaml>=6",
+]
+# full extras (everything above)
+full = [
+  "pyCSRML[analysis,umap,yaml]",
+]
+# development / testing
+dev = [
+  "pytest>=7",
+  "pytest-cov",
+  "pylint>=3",
+  "pandas>=1.5",
+  "matplotlib>=3.6",
+  "sphinx>=7",
+  "sphinx-rtd-theme>=2",
+  "sphinx-autodoc-typehints",
+  "myst-parser",
+]
+
+[project.urls]
+Homepage       = "https://github.com/luc-miaz/pyCSRML"
+Documentation  = "https://pycsrml.readthedocs.io"
+Repository     = "https://github.com/luc-miaz/pyCSRML"
+"Bug Tracker"  = "https://github.com/luc-miaz/pyCSRML/issues"
+Changelog      = "https://github.com/luc-miaz/pyCSRML/blob/main/CHANGELOG.md"
+
+# ---------------------------------------------------------------------------
+# Hatch build configuration
+# ---------------------------------------------------------------------------
+[tool.hatch.build.targets.sdist]
+include = [
+  "pyCSRML/**",
+  "tests/**",
+  "README.md",
+  "LICENSE",
+  "CHANGELOG.md",
+]
+exclude = [
+  "tests/test_data/**",     # large reference data not shipped on PyPI
+  "**/__pycache__",
+  "**/*.pyc",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["pyCSRML"]
+
+# ---------------------------------------------------------------------------
+# Pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts   = "-v"
+markers   = [
+  "slow: marks tests as slow (concordance run over 14 k compounds)",
+]
+
+# ---------------------------------------------------------------------------
+# Coverage
+# ---------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["pyCSRML"]
+omit   = ["pyCSRML/convert_xml_to_json.py"]
+
+[tool.coverage.report]
+show_missing = true
+
+# ---------------------------------------------------------------------------
+# Pylint
+# ---------------------------------------------------------------------------
+[tool.pylint.main]
+ignore-paths = [
+  "tests/",
+  "docs/",
+]
+
+[tool.pylint.messages_control]
+disable = [
+  "missing-module-docstring",
+  "too-many-arguments",
+  "too-many-instance-attributes",
+  "too-few-public-methods",
+  "import-outside-toplevel",  # intentional lazy imports
+  "broad-exception-caught",
+]
+
+[tool.pylint.format]
+max-line-length = 120
