@@ -1,10 +1,18 @@
 """
-Concordance test: compare pyCSRML PFASFingerprinter output against
-ChemoTyper reference fingerprints from Richard et al. (2023).
+Concordance test: compare pyCSRML fingerprinter output against
+ChemoTyper reference fingerprints.
+
+Two test suites:
+  1. Richard2023 (small ~14 k) — PFASFingerprinter vs TableS2/S5 CSVs
+  2. ToxCast TSV (large 9014)  — ToxPrintFingerprinter (729 bits) and
+     PFASFingerprinter (129 bits) vs ChemoTyper TSV exports
 
 Reference files (tests/test_data/):
-  Richard2023_SI_TableS2.csv  — DTXSID + all 129 TxP_PFAS bits (ChemoTyper)
+  Richard2023_SI_TableS2.csv  — DTXSID + all 129 TxP_PFAS bits
   Richard2023_SI_TableS5.csv  — DTXSID + SMILES + compound metadata
+  toxcast_smiles.smi          — 9014 SMILES (same row order as TSV files)
+  toxprint_V2.tsv             — 9014 × 729 ToxPrint ChemoTyper reference
+  TxP_PFAS_v1.tsv             — 9014 × 129 TxP_PFAS ChemoTyper reference
 
 Run with:
     pytest tests/test_chemotyper_concordance.py -v -s
@@ -21,7 +29,7 @@ from rdkit import Chem
 pytestmark = pytest.mark.slow
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from pyCSRML import PFASFingerprinter
+from pyCSRML import PFASFingerprinter, ToxPrintFingerprinter
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -29,6 +37,9 @@ from pyCSRML import PFASFingerprinter
 DATA_DIR = os.path.join(os.path.dirname(__file__), "test_data")
 S2_PATH = os.path.join(DATA_DIR, "Richard2023_SI_TableS2.csv")  # reference fp
 S5_PATH = os.path.join(DATA_DIR, "Richard2023_SI_TableS5.csv")  # SMILES
+SMI_PATH         = os.path.join(DATA_DIR, "toxcast_smiles.smi")
+TOXPRINT_TSV     = os.path.join(DATA_DIR, "toxprint_V2.tsv")
+TXPPFAS_TSV      = os.path.join(DATA_DIR, "TxP_PFAS_v1.tsv")
 
 
 # ---------------------------------------------------------------------------
@@ -38,6 +49,11 @@ S5_PATH = os.path.join(DATA_DIR, "Richard2023_SI_TableS5.csv")  # SMILES
 @pytest.fixture(scope="module")
 def fp():
     return PFASFingerprinter()
+
+
+@pytest.fixture(scope="module")
+def fp_toxprint():
+    return ToxPrintFingerprinter()
 
 
 @pytest.fixture(scope="module")
@@ -53,6 +69,25 @@ def reference_df():
     if before != after:
         print(f"\n[fixture] Dropped {before - after} rows with missing SMILES")
     return merged
+
+
+@pytest.fixture(scope="module")
+def toxcast_smiles():
+    """9014 SMILES from toxcast_smiles.smi (same row order as TSV files)."""
+    with open(SMI_PATH) as fh:
+        return [line.strip() for line in fh if line.strip()]
+
+
+@pytest.fixture(scope="module")
+def toxprint_tsv_df():
+    """9014 × 729 ToxPrint reference; M_READ_ERROR becomes index via index_col=0."""
+    return pd.read_csv(TOXPRINT_TSV, sep="\t", index_col=0)
+
+
+@pytest.fixture(scope="module")
+def txppfas_tsv_df():
+    """9014 × 129 TxP_PFAS reference; M_READ_ERROR becomes index via index_col=0."""
+    return pd.read_csv(TXPPFAS_TSV, sep="\t", index_col=0)
 
 
 # ---------------------------------------------------------------------------
@@ -258,3 +293,137 @@ def test_known_compounds_spot_check(fp, reference_df):
     benzene = Chem.MolFromSmiles("c1ccccc1")
     arr_benz, _ = fp.fingerprint(benzene)
     assert not arr_benz.any(), "Benzene should have no TxP_PFAS bits"
+
+
+# ---------------------------------------------------------------------------
+# Helpers — large-dataset concordance
+# ---------------------------------------------------------------------------
+
+def _compute_concordance_from_arrays(fp_obj, smiles_list, ref_df, row_mask=None):
+    """Parse SMILES, run fingerprinter, align to reference DataFrame.
+
+    Parameters
+    ----------
+    fp_obj      : Fingerprinter with ``bit_names`` and ``fingerprint_batch``
+    smiles_list : list[str], length N (same row order as ref_df)
+    ref_df      : DataFrame with bit columns; length N
+    row_mask    : optional bool array of length N to restrict to a subset
+
+    Returns
+    -------
+    pred_matrix  : (n_valid, n_bits) int array
+    ref_matrix   : (n_valid, n_bits) int array
+    bit_names    : list[str]
+    n_failed     : int — SMILES that could not be parsed
+    """
+    bit_names = fp_obj.bit_names
+
+    if row_mask is not None:
+        indices = np.where(row_mask)[0]
+        smiles_subset = [smiles_list[i] for i in indices]
+        ref_subset = ref_df.iloc[indices]
+    else:
+        smiles_subset = smiles_list
+        ref_subset = ref_df
+
+    mols, valid_local_idx = [], []
+    for i, smi in enumerate(smiles_subset):
+        mol = Chem.MolFromSmiles(str(smi))
+        if mol is not None:
+            mols.append(mol)
+            valid_local_idx.append(i)
+
+    n_failed = len(smiles_subset) - len(mols)
+    pred_matrix = fp_obj.fingerprint_batch(mols).astype(int)
+    ref_matrix = ref_subset.iloc[valid_local_idx][bit_names].to_numpy(dtype=int)
+    return pred_matrix, ref_matrix, bit_names, n_failed
+
+
+def _print_concordance_report(pred, ref, bit_names, title, capsys):
+    """Print a full concordance report and return (overall_acc, bit_acc, precision, recall)."""
+    n_compounds, n_bits = pred.shape
+    match = pred == ref
+
+    overall_acc = match.mean()
+    bit_acc = match.mean(axis=0)
+    compound_acc = match.mean(axis=1)
+
+    tp = ((pred == 1) & (ref == 1)).sum(axis=0)
+    fp_count = ((pred == 1) & (ref == 0)).sum(axis=0)
+    fn = ((pred == 0) & (ref == 1)).sum(axis=0)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        precision = np.where(tp + fp_count > 0, tp / (tp + fp_count).astype(float), np.nan)
+        recall    = np.where(tp + fn > 0,        tp / (tp + fn).astype(float),        np.nan)
+        f1_denom  = precision + recall
+        f1        = np.where(f1_denom > 0, 2 * precision * recall / f1_denom, np.nan)
+
+    with capsys.disabled():
+        print(f"\n{'='*75}")
+        print(f"  {title}")
+        print(f"{'='*75}")
+        print(f"  Compounds processed : {n_compounds}")
+        print(f"  Bits compared       : {n_bits}")
+        print(f"  Overall accuracy    : {overall_acc:.4f}  ({overall_acc*100:.2f} %)")
+        print(f"  Bits >= 90% acc.    : {(bit_acc >= 0.90).sum()} / {n_bits}")
+        print(f"  Bits >= 70% acc.    : {(bit_acc >= 0.70).sum()} / {n_bits}")
+        print(f"  Cmpds with 100% acc : {(compound_acc == 1).sum()} / {n_compounds}")
+        print(f"  Mean cmpd accuracy  : {compound_acc.mean():.4f}")
+        print()
+
+        # Bits sorted worst-first; only print the 30 worst + those below 90%
+        order = np.argsort(bit_acc)
+        below90 = (bit_acc < 0.90).sum()
+        n_show = max(below90, 30)
+        print(f"  Showing {n_show} lowest-accuracy bits:")
+        print(f"  {'Bit name':<62} {'acc':>5}  {'prec':>5}  {'rec':>5}  {'f1':>5}")
+        print(f"  {'-'*62}  {'-----':>5}  {'-----':>5}  {'-----':>5}  {'-----':>5}")
+        for rank, i in enumerate(order[:n_show]):
+            p = f"{precision[i]:.3f}" if not np.isnan(precision[i]) else "  N/A"
+            r = f"{recall[i]:.3f}"    if not np.isnan(recall[i])    else "  N/A"
+            f = f"{f1[i]:.3f}"        if not np.isnan(f1[i])        else "  N/A"
+            flag = " << WORST" if rank == 0 else ""
+            print(f"  {bit_names[i]:<62} {bit_acc[i]:.3f}  {p:>5}  {r:>5}  {f:>5}{flag}")
+        print(f"{'='*75}\n")
+
+    return overall_acc, bit_acc, precision, recall
+
+
+# ---------------------------------------------------------------------------
+# New tests — large ToxCast dataset
+# ---------------------------------------------------------------------------
+
+def test_toxprint_concordance_tsv(fp_toxprint, toxcast_smiles, toxprint_tsv_df, capsys):
+    """ToxPrintFingerprinter vs toxprint_V2.tsv ChemoTyper reference (9014 mols)."""
+    pred, ref, bit_names, n_failed = _compute_concordance_from_arrays(
+        fp_toxprint, toxcast_smiles, toxprint_tsv_df
+    )
+    with capsys.disabled():
+        print(f"\n[info] SMILES parse failures: {n_failed}")
+    overall_acc, bit_acc, _, _ = _print_concordance_report(
+        pred, ref, bit_names,
+        "ChemoTyper concordance — ToxPrint V2 (ToxCast, 9014 mols)",
+        capsys,
+    )
+    assert overall_acc >= 0.90, f"Overall accuracy {overall_acc:.4f} below 0.90"
+    pct = (bit_acc >= 0.70).mean()
+    assert pct >= 0.85, f"Only {pct*100:.1f}% of bits have >=70% accuracy (threshold: 85%)"
+
+
+def test_txppfas_concordance_tsv(fp, toxcast_smiles, txppfas_tsv_df, capsys):
+    """PFASFingerprinter vs TxP_PFAS_v1.tsv reference on CF-containing subset (~808 mols)."""
+    cf_mask = (txppfas_tsv_df.values > 0).any(axis=1)
+    with capsys.disabled():
+        print(f"\n[info] CF-containing compounds: {cf_mask.sum()} / {len(cf_mask)}")
+    pred, ref, bit_names, n_failed = _compute_concordance_from_arrays(
+        fp, toxcast_smiles, txppfas_tsv_df, row_mask=cf_mask
+    )
+    with capsys.disabled():
+        print(f"[info] SMILES parse failures: {n_failed}")
+    overall_acc, bit_acc, _, _ = _print_concordance_report(
+        pred, ref, bit_names,
+        "ChemoTyper concordance — TxP_PFAS v1 (CF-subset, ~808 mols)",
+        capsys,
+    )
+    assert overall_acc >= 0.90, f"Overall accuracy {overall_acc:.4f} below 0.90"
+    pct = (bit_acc >= 0.70).mean()
+    assert pct >= 0.85, f"Only {pct*100:.1f}% of bits have >=70% accuracy (threshold: 85%)"

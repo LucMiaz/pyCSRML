@@ -455,8 +455,25 @@ def _atom_to_smarts(element: Optional[str], matchifs: dict) -> str:
             if v.startswith("#"):
                 target = v
             else:
-                n = _atomic_num(v)
-                target = f"#{n}" if n is not None else None
+                # Handle optional charge suffix: "O-" → "#8-1", "N+" → "#7+1"
+                elem_part = v.rstrip("+-")
+                charge_part = v[len(elem_part):]
+                n = _atomic_num(elem_part) if elem_part else None
+                if n is None:
+                    n = _atomic_num(v)
+                if n is not None:
+                    if charge_part == "-":
+                        target = f"#{n}-1"
+                    elif charge_part == "+":
+                        target = f"#{n}+1"
+                    elif charge_part == "--":
+                        target = f"#{n}-2"
+                    elif charge_part == "++":
+                        target = f"#{n}+2"
+                    else:
+                        target = f"#{n}"
+                else:
+                    target = None
             if target:
                 if negate:
                     parts_and.append(f"!{target}")
@@ -668,6 +685,11 @@ def _parse_molecule(mol_el) -> Optional[dict]:
     bonds: list = []
     for bond_el in mol_el.findall(".//csrml:bonds/csrml:bond", NS):
         order = bond_el.get("order", "single")
+        # A query bond with an aromaticBond matchIf feature should use aromatic order.
+        if order == "query":
+            mif_el = bond_el.find("csrml:matchIf", NS)
+            if mif_el is not None and mif_el.get("feature") == "aromaticBond":
+                order = "aromatic"
         atom_refs = [a.get("id") for a in bond_el.findall("csrml:atom", NS)]
         if len(atom_refs) == 2 and all(ar in atoms for ar in atom_refs):
             bonds.append((atom_refs[0], atom_refs[1], order))
@@ -724,11 +746,12 @@ def parse_subgraph(sg_el) -> dict:
 
             folded_all = True
             for exc_anchor_id, exc_anchor_info in anchor_pairs:
-                main_ref_id = (
+                main_ref_ids = (
                     exc_anchor_info["matchifs"]["matchingQueryAtom"]
-                    .get("values", [None])[0]
+                    .get("values", [])
                 )
-                if main_ref_id is None or main_ref_id not in match_mol["atoms"]:
+                valid_refs = [r for r in main_ref_ids if r in match_mol["atoms"]]
+                if not valid_refs:
                     folded_all = False
                     break
 
@@ -740,10 +763,11 @@ def parse_subgraph(sg_el) -> dict:
                     folded_all = False
                     break
 
-                # Inject negation into the main-pattern atom
-                main_atom = match_mol["atoms"][main_ref_id]
-                neg_d = main_atom["matchifs"].setdefault("recursive_negation", {"values": []})
-                neg_d["values"].append(exc_smarts)
+                # Inject negation into ALL referenced main-pattern atoms
+                for main_ref_id in valid_refs:
+                    main_atom = match_mol["atoms"][main_ref_id]
+                    neg_d = main_atom["matchifs"].setdefault("recursive_negation", {"values": []})
+                    neg_d["values"].append(exc_smarts)
 
             if not folded_all:
                 remaining_exceptions.append(exc_mol)
