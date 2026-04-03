@@ -25,7 +25,7 @@ The module was implemented from two fingerprints descriptions:
 ## Performance
 
 Accuracy is measured by comparing pyCSRML bit vectors against the reference
-[ChemoTyper](https://www.molecular-networks.com/products/chemotyper) tool output.  
+[ChemoTyper](https://www.molecular-networks.com/products/chemotyper) tool output for [ToxCast invitrodb v4.3](https://clowder.edap-cluster.com/datasets/66b50344e4b0a7c65d2a0792?space=66858831e4b0a7c65d17841d) substances and against data from Richard *et al.* 2023 (SI Tables S2 and S5).  
 Run `pytest tests/test_chemotyper_concordance.py -v -s` to reproduce; the full
 per-bit breakdown is written to `tests/concordance_report.md`.
 

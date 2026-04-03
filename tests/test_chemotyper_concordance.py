@@ -209,6 +209,24 @@ def test_chemotyper_concordance(fp, reference_df, capsys):
 
         print(f"{'='*65}\n")
 
+    # -- Save to concordance report --
+    report_path = os.path.join(os.path.dirname(__file__), "concordance_report.md")
+    _save_concordance_report(
+        dataset_name="TxP\\_PFAS v1 — Richard *et al.* 2023 (PFAS set, 14 710 compounds)",
+        n_compounds=n_compounds,
+        n_failed=n_failed,
+        overall_acc=overall_acc,
+        bit_acc=bit_acc,
+        bit_names=bit_names,
+        precision=precision,
+        recall=recall,
+        f1=f1,
+        report_path=report_path,
+        append=False,  # this test runs first; start a fresh file
+    )
+    with capsys.disabled():
+        print(f"[info] Concordance report written to {report_path}")
+
     # -- Assertions --
     assert overall_acc >= 0.90, (
         f"Overall bit accuracy {overall_acc:.4f} is below the 0.90 threshold. "
@@ -480,7 +498,7 @@ def test_toxprint_concordance_tsv(fp_toxprint, toxcast_smiles, toxprint_tsv_df, 
         recall=recall,
         f1=f1,
         report_path=report_path,
-        append=False,  # start a fresh file
+        append=True,  # Richard et al. test runs first (append=False) above
     )
     with capsys.disabled():
         print(f"[info] Concordance report written to {report_path}")

@@ -11,7 +11,8 @@ Two fingerprint sets are bundled:
 Concordance with the reference ChemoTyper tool:
 
 * **99.4 %** overall accuracy across 14 710 PFAS compounds from Richard
-  *et al.* (2023), using the TxP_PFAS v1.0 fingerprint.
+  *et al.* (2023), using the TxP_PFAS v1.0 fingerprint (bits ≥ 90 %:
+  see ``tests/concordance_report.md`` after re-running the test suite).
 * **98.17 %** overall accuracy on the full ToxCast library (9 014 compounds,
   711 / 729 bits ≥ 90 %) for ToxPrint v2.0.
 * **99.98 %** overall accuracy on the ToxCast CF-containing subset (808 compounds,
