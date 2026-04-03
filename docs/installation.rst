@@ -60,6 +60,6 @@ Development install
 
 .. code-block:: bash
 
-   git clone https://github.com/luc-miaz/pyCSRML
+   git clone https://github.com/LucMiaz/pyCSRML
    cd pyCSRML
    pip install -e ".[dev]"

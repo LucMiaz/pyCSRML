@@ -1,6 +1,6 @@
 # pyCSRML
 
-[![CI](https://github.com/luc-miaz/pyCSRML/actions/workflows/ci.yml/badge.svg)](https://github.com/luc-miaz/pyCSRML/actions/workflows/ci.yml)
+[![CI](https://github.com/LucMiaz/pyCSRML/actions/workflows/ci.yml/badge.svg)](https://github.com/LucMiaz/pyCSRML/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/pyCSRML)](https://pypi.org/project/pyCSRML/)
 [![Python](https://img.shields.io/pypi/pyversions/pyCSRML)](https://pypi.org/project/pyCSRML/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -173,7 +173,7 @@ Full API reference: **[pycsrml.readthedocs.io](https://pycsrml.readthedocs.io)**
 ## Development
 
 ```bash
-git clone https://github.com/luc-miaz/pyCSRML
+git clone https://github.com/LucMiaz/pyCSRML
 cd pyCSRML
 pip install -e ".[dev]"
 
