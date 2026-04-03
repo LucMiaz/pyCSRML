@@ -20,22 +20,20 @@ The module was implemented from two fingerprints descriptions:
 | **ToxPrint v2.0** | 729 | General toxicologically relevant substructures | Yang *et al.* 2015  |
 | **TxP_PFAS v1.0** | 129 | Per- and polyfluoroalkyl substance (PFAS) chemotypes | Richard *et al.* 2023
 
-## Disclaimer
 
-This module is not affiliated with the authors of the original CSRML project. Visit [Chemotyper repository](https://github.com/mn-am/chemotyper) if you want to access and use the original CSRML.
 
 ## Performance
 
 Accuracy is measured by comparing pyCSRML bit vectors against the reference
-[ChemoTyper](https://www.molecular-networks.com/products/chemotyper) tool output for [ToxCast invitrodb v4.3](https://clowder.edap-cluster.com/datasets/66b50344e4b0a7c65d2a0792?space=66858831e4b0a7c65d17841d) substances and against data from Richard *et al.* 2023 (SI Tables S2 and S5).  
+[ChemoTyper](https://www.molecular-networks.com/products/chemotyper) tool output.  
 Run `pytest tests/test_chemotyper_concordance.py -v -s` to reproduce; the full
 per-bit breakdown is written to `tests/concordance_report.md`.
 
-| Dataset | Compounds | Fingerprint | Overall accuracy | Bits ≥ 90 % acc |
-|---|---|---|---|---|
-| Richard *et al.* 2023 (PFAS set) | 14 710 | TxP_PFAS v1 | **99.4 %** | — |
-| ToxCast (full) | 9 014 | ToxPrint v2 | **98.17 %** | 711 / 729 |
-| ToxCast (CF-containing subset) | 808 | TxP_PFAS v1 | **99.98 %** | 129 / 129 |
+| Dataset | Compounds | Fingerprint | Overall accuracy | Bits ≥ 90 % acc | Macro MCC | Macro Bal Acc | Macro ROC-AUC |
+|---|---|---|---|---|---|---|---|
+| Richard *et al.* 2023 (PFAS set) | 14 710 | TxP_PFAS v1 | **99.99 %** | 129 / 129 | **0.9971** | **0.9989** | **0.9989** |
+| ToxCast (full) | 9 014 | ToxPrint v2 | **98.17 %** | 711 / 729 | **0.9155** | **0.9634** | **0.9634** |
+| ToxCast (CF-containing subset) | 808 | TxP_PFAS v1 | **99.98 %** | 129 / 129 | **0.9905** | **0.9924** | **0.9924** |
 
 > **Reading the table:** "CF-containing subset" means only the 808 ToxCast compounds
 > for which ChemoTyper sets at least one TxP_PFAS bit — the meaningful subset for
@@ -204,7 +202,7 @@ If you use pyCSRML in academic work, please cite the original ToxPrint / ChemoTy
 <a href="https://github.com/LucMiaz/pyCSRML">pyCSRML</a> © 1999 by <a href="https://cogitopia.dev">Luc T. Miaz</a> is licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">
 
 ## Acknowledgments
-While working on this project I was part of the [ZeroPM project](https://zeropm.eu/) (WP2) and received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No 101036756. This work was developed at the [Department of Environmental Science](https://aces.su.se) at Stockholm University.<br />
+This project is part of the [ZeroPM project](https://zeropm.eu/) (WP2) and has received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No 101036756. This work was developed at the [Department of Environmental Science](https://aces.su.se) at Stockholm University.<br />
 
 
 <img alt="EU logo" src="https://zeropm.eu/wp-content/uploads/2021/12/flag_yellow_low.jpg" width=100/>     <a rel='zeropm_web' href="https://zeropm.eu/"/><img alt="zeropm logo" src="https://zeropm.eu/wp-content/uploads/2022/01/ZeroPM-logo.png" width=250 /></a><a rel='zeropm_web' href="https://su.se/"/><img alt="zeropm logo" src="https://eu01web.zoom.us/account/branding/p/5065401a-9915-4baa-9c16-665dcd743470.png" width=200 /></a>
