@@ -20,7 +20,9 @@ The module was implemented from two fingerprints descriptions:
 | **ToxPrint v2.0** | 729 | General toxicologically relevant substructures | Yang *et al.* 2015  |
 | **TxP_PFAS v1.0** | 129 | Per- and polyfluoroalkyl substance (PFAS) chemotypes | Richard *et al.* 2023
 
+## Disclaimer
 
+This module is not affiliated with the authors of the original CSRML project. Visit [Chemotyper repository](https://github.com/mn-am/chemotyper) if you want to access and use the original CSRML.
 
 ## Performance
 

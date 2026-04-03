@@ -2,9 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2026-04-03
+
+Updated documentation and preparation for publication.
+
 ## [0.1.0] — 2026-03-20
 
-Initial public release.
+Initial module.
 
 ### Added
 - Parse CSRML XML (ToxPrint v2 and TxP_PFAS v1) to SMARTS
