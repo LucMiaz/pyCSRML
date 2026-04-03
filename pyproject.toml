@@ -13,7 +13,7 @@ readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
 authors = [
-  { name = "Luc Miaz", email = "" },
+  { name = "Luc Miaz", email = "luc@miaz.ch" },
 ]
 keywords = [
   "cheminformatics", "PFAS", "fingerprint", "SMARTS", "CSRML",
@@ -72,11 +72,11 @@ dev = [
 ]
 
 [project.urls]
-Homepage       = "https://github.com/luc-miaz/pyCSRML"
+Homepage       = "https://github.com/LucMiaz/pyCSRML"
 Documentation  = "https://pycsrml.readthedocs.io"
-Repository     = "https://github.com/luc-miaz/pyCSRML"
-"Bug Tracker"  = "https://github.com/luc-miaz/pyCSRML/issues"
-Changelog      = "https://github.com/luc-miaz/pyCSRML/blob/main/CHANGELOG.md"
+Repository     = "https://github.com/LucMiaz/pyCSRML"
+"Bug Tracker"  = "https://github.com/LucMiaz/pyCSRML/issues"
+Changelog      = "https://github.com/LucMiaz/pyCSRML/blob/main/CHANGELOG.md"
 
 # ---------------------------------------------------------------------------
 # Hatch build configuration
