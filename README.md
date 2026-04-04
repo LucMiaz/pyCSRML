@@ -3,7 +3,7 @@
 [![CI](https://github.com/LucMiaz/pyCSRML/actions/workflows/ci.yml/badge.svg)](https://github.com/LucMiaz/pyCSRML/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/pyCSRML)](https://pypi.org/project/pyCSRML/)
 [![Python](https://img.shields.io/pypi/pyversions/pyCSRML)](https://pypi.org/project/pyCSRML/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 [![Docs](https://readthedocs.org/projects/pycsrml/badge/?version=latest)](https://pycsrml.readthedocs.io)
 
 **pyCSRML** is a pure-Python re-implementation of the
