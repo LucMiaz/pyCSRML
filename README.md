@@ -25,15 +25,17 @@ The module was implemented from two fingerprints descriptions:
 ## Performance
 
 Accuracy is measured by comparing pyCSRML bit vectors against the reference
-[ChemoTyper](https://www.molecular-networks.com/products/chemotyper) tool output.  
+[ChemoTyper](https://www.molecular-networks.com/products/chemotyper) tool output.
 Run `pytest tests/test_chemotyper_concordance.py -v -s` to reproduce; the full
 per-bit breakdown is written to `tests/concordance_report.md`.
 
 | Dataset | Compounds | Fingerprint | Overall accuracy | Bits ≥ 90 % acc | Macro MCC | Macro Bal Acc | Macro ROC-AUC |
 |---|---|---|---|---|---|---|---|
 | Richard *et al.* 2023 (PFAS set) | 14 710 | TxP_PFAS v1 | **99.99 %** | 129 / 129 | **0.9971** | **0.9989** | **0.9989** |
-| ToxCast (full) | 9 014 | ToxPrint v2 | **98.17 %** | 711 / 729 | **0.9155** | **0.9634** | **0.9634** |
+| ToxCast (full) | 9 014 | ToxPrint v2 | **99.71 %** | 725 / 729 | **0.9326** | **0.9703** | **0.9703** |
 | ToxCast (CF-containing subset) | 808 | TxP_PFAS v1 | **99.98 %** | 129 / 129 | **0.9905** | **0.9924** | **0.9924** |
+| CLinventory | 181 745 | ToxPrint v2 | **99.77 %** | 726 / 729 | **0.9320** | **0.9710** | **0.9710** |
+| CLinventory | 181 745 | TxP_PFAS v1 | **100.00 %** | 129 / 129 | **0.9936** | **0.9946** | **0.9946** |
 
 > **Reading the table:** "CF-containing subset" means only the 808 ToxCast compounds
 > for which ChemoTyper sets at least one TxP_PFAS bit — the meaningful subset for
@@ -42,18 +44,88 @@ per-bit breakdown is written to `tests/concordance_report.md`.
 
 ### Known discrepancies
 
-The 18 bits below 90 % accuracy in ToxPrint v2 are all in the metal / inorganic
-chemotype groups; TxP_PFAS v1 has 4 bits below 100 % (all above 98.9 %).  
-Root causes (see `tests/_check_tsv_alignment.py` and `tests/concordance_report.md`):
+The 4 bits below 90 % accuracy in ToxPrint v2 are in ring heteroatom and chain
+chemotype groups; TxP_PFAS v1 has 3 bits below 100 % (all above 98.9 %).  
+Root causes (see `tests/concordance_report.md`):
 
 | Bit / category | Fingerprint | Accuracy | Direction | Root cause |
 |---|---|---|---|---|
-| `atom:element_noble_gas` | ToxPrint | 0.0 % | False positives | Noble-gas SMARTS approximated as `[*]` — matches every atom |
-| `atom:element_metal_group_III`, `atom:element_metal_poor_metal`, etc. | ToxPrint | 0.1 – 5 % | False positives | Metal / metalloid element-group patterns use G/Q pseudo-elements that are approximated as `[*]`, causing widespread false positives |
-| `ring:hetero_[6]_N_tetrazine_generic`, `ring:hetero_[6]_N_triazine_generic` | ToxPrint | 30 – 32 % | False positives | Nitrogen-count constraints in 6-membered heteroaromatic rings use atom-count SMARTS that over-match similar rings |
+| `ring:hetero_[6]_Z_generic` | ToxPrint | 54.6 % | False positives | Over-broad 6-membered heteroatom-ring SMARTS; pyCSRML prevalence 69.6 % vs ChemoTyper 24.3 % |
+| `chain:alkaneBranch_isopropyl_C3` | ToxPrint | 74.1 % | False positives | Ring-attachment SMARTS permissive on `noZ` (not-connected-to-heteroatom) modifier; pyCSRML prevalence 37.5 % vs ChemoTyper 11.6 % |
+| `chain:alkaneCyclic_ethyl_C2_(connect_noZ)` | ToxPrint | 75.9 % | False positives | Same `noZ` over-matching; pyCSRML prevalence 41.8 % vs ChemoTyper 17.7 % |
+| `chain:alkeneCyclic_ethene_generic` | ToxPrint | 87.0 % | False positives | Cyclic alkene SMARTS over-matches; pyCSRML prevalence 17.4 % vs ChemoTyper 10.3 % |
 | `pfas_chain:alkeneLinear_mono-ene_ethylene_generic_F` | TxP_PFAS | 98.9 % | False negatives (recall 40 %) | RDKit perceives the C=C of tautomeric fluoropyrimidines (5-fluorouracil) as aromatic; the SMARTS `[#9]-[#6;A]=[#6;A]` requires aliphatic atoms and misses them |
 | `pfas_bond:C=N_imine_FCN` | TxP_PFAS | 99.5 % | False negatives (recall 33 %) | Same aromaticity issue: the C=N bond in fluorinated heterocycles is perceived as aromatic by RDKit, so the aliphatic imine SMARTS does not match |
 | `pfas_bond:aromatic_FCc1c` | TxP_PFAS | 99.5 % | Slight false positives (precision 97.2 %) | Aromatic F-C pattern slightly over-matches due to SMARTS approximation of the exception clause |
+
+---
+
+## Timing Benchmark
+
+Five molecule-size-stratified sets are extracted from the CLinventory and used
+to compare pyCSRML speed against ChemoTyper on realistic chemical diversity.
+
+| Set | Heavy-atom range | Molecules |
+|---|---|---|
+| `bench_tiny` | 1 – 10 | *auto* |
+| `bench_small` | 11 – 20 | *auto* |
+| `bench_medium` | 21 – 35 | *auto* |
+| `bench_large` | 36 – 60 | *auto* |
+| `bench_xlarge` | 61 + | *auto* |
+
+### Timing results (ms / molecule)
+
+| Set | Heavy atoms | pyCSRML ToxPrint v2 | pyCSRML TxP\_PFAS v1 | ChemoTyper ToxPrint v2 | ChemoTyper TxP\_PFAS v1 |
+|---|---|---|---|---|---|
+| bench\_tiny | 1 – 10 | **3.76** | **0.73** | — | — |
+| bench\_small | 11 – 20 | **5.47** | **1.01** | — | — |
+| bench\_medium | 21 – 35 | **8.23** | **1.53** | — | — |
+| bench\_large | 36 – 60 | **12.32** | **2.19** | — | — |
+| bench\_xlarge | 61 + | **23.20** | **4.46** | — | — |
+
+pyCSRML measured on **Snapdragon X Elite X1E78100** (ARM64, 12 cores, ~32 GB RAM),
+Python 3.14.2, RDKit 2025.09.3, NumPy 2.3.5; 5 repetitions, median reported.
+500 molecules per set. ChemoTyper reference timing not yet collected (see
+`tests/test_data/size_benchmarks/chemotyper_timing_template.csv`).
+
+### How to reproduce
+
+**1. Extract benchmark sets** (one-time):
+
+```bash
+python scripts/create_size_benchmarks.py
+```
+
+Outputs `tests/test_data/size_benchmarks/bench_*.smiles`,
+`bench_metadata.csv`, and `chemotyper_timing_template.csv`.
+
+**2. Time pyCSRML** (saves `pycsrml_timing_baseline.json`):
+
+```bash
+python scripts/benchmark_pycsrml_timing.py          # 5 reps by default
+python scripts/benchmark_pycsrml_timing.py --reps 3 # faster
+```
+
+**3. Run ChemoTyper** on each `.smiles` file (ToxPrint V2 and TxP\_PFAS v1),
+export results as TSV, and place zips in `tests/test_data/size_benchmarks/`:
+
+```
+bench_tiny_toxprint.zip    bench_tiny_txppfas.zip
+bench_small_toxprint.zip   bench_small_txppfas.zip
+...
+```
+
+Fill in the three-repetition ChemoTyper timing in `chemotyper_timing_template.csv`.
+
+**4. Run regression tests**:
+
+```bash
+pytest tests/test_benchmark_regression.py -v -m slow
+```
+
+Timing regression: fails if any set is >30 % slower than the saved baseline.  
+Accuracy regression: fails if overall bit accuracy drops >0.1 pp from baseline.
+Both test types skip gracefully until their respective baseline / zip files exist.
 
 ---
 

@@ -136,7 +136,12 @@ def _load_from_xml(xml_path: Path, json_cache: Optional[Path]) -> dict:
     Parse a CSRML XML file; use / populate a JSON cache when provided.
     """
     if json_cache and json_cache.exists():
-        if not xml_path.exists() or json_cache.stat().st_mtime >= xml_path.stat().st_mtime:
+        _parser = Path(__file__).parent / "_csrml.py"
+        _parser_mtime = _parser.stat().st_mtime if _parser.exists() else 0.0
+        if (
+            (not xml_path.exists() or json_cache.stat().st_mtime >= xml_path.stat().st_mtime)
+            and json_cache.stat().st_mtime >= _parser_mtime
+        ):
             with open(json_cache, encoding="utf-8") as f:
                 return json.load(f)
 

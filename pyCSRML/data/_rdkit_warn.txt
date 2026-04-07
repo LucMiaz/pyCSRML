@@ -1,0 +1,145 @@
+[08:44:02] 
+
+****
+Post-condition Violation
+Element 'M' not found
+Violation occurred on line 93 in file D:\bld\rdkit-meta_1764390771766\work\Code\GraphMol\PeriodicTable.h
+Failed Expression: anum > -1
+****
+
+[08:44:02] 
+
+****
+Post-condition Violation
+Element 'R' not found
+Violation occurred on line 93 in file D:\bld\rdkit-meta_1764390771766\work\Code\GraphMol\PeriodicTable.h
+Failed Expression: anum > -1
+****
+
+[08:44:02] 
+
+****
+Post-condition Violation
+Element 'R' not found
+Violation occurred on line 93 in file D:\bld\rdkit-meta_1764390771766\work\Code\GraphMol\PeriodicTable.h
+Failed Expression: anum > -1
+****
+
+[08:44:02] 
+
+****
+Post-condition Violation
+Element 'R' not found
+Violation occurred on line 93 in file D:\bld\rdkit-meta_1764390771766\work\Code\GraphMol\PeriodicTable.h
+Failed Expression: anum > -1
+****
+
+[08:44:02] 
+
+****
+Post-condition Violation
+Element 'R' not found
+Violation occurred on line 93 in file D:\bld\rdkit-meta_1764390771766\work\Code\GraphMol\PeriodicTable.h
+Failed Expression: anum > -1
+****
+
+[08:44:02] 
+
+****
+Post-condition Violation
+Element 'R' not found
+Violation occurred on line 93 in file D:\bld\rdkit-meta_1764390771766\work\Code\GraphMol\PeriodicTable.h
+Failed Expression: anum > -1
+****
+
+[08:44:02] 
+
+****
+Post-condition Violation
+Element 'R' not found
+Violation occurred on line 93 in file D:\bld\rdkit-meta_1764390771766\work\Code\GraphMol\PeriodicTable.h
+Failed Expression: anum > -1
+****
+
+[08:44:02] 
+
+****
+Post-condition Violation
+Element 'R' not found
+Violation occurred on line 93 in file D:\bld\rdkit-meta_1764390771766\work\Code\GraphMol\PeriodicTable.h
+Failed Expression: anum > -1
+****
+
+[08:44:02] 
+
+****
+Post-condition Violation
+Element 'R' not found
+Violation occurred on line 93 in file D:\bld\rdkit-meta_1764390771766\work\Code\GraphMol\PeriodicTable.h
+Failed Expression: anum > -1
+****
+
+[08:44:02] 
+
+****
+Post-condition Violation
+Element 'M' not found
+Violation occurred on line 93 in file D:\bld\rdkit-meta_1764390771766\work\Code\GraphMol\PeriodicTable.h
+Failed Expression: anum > -1
+****
+
+[08:44:02] 
+
+****
+Post-condition Violation
+Element 'M' not found
+Violation occurred on line 93 in file D:\bld\rdkit-meta_1764390771766\work\Code\GraphMol\PeriodicTable.h
+Failed Expression: anum > -1
+****
+
+[08:44:02] 
+
+****
+Post-condition Violation
+Element 'M' not found
+Violation occurred on line 93 in file D:\bld\rdkit-meta_1764390771766\work\Code\GraphMol\PeriodicTable.h
+Failed Expression: anum > -1
+****
+
+[08:44:02] 
+
+****
+Post-condition Violation
+Element 'M' not found
+Violation occurred on line 93 in file D:\bld\rdkit-meta_1764390771766\work\Code\GraphMol\PeriodicTable.h
+Failed Expression: anum > -1
+****
+
+[08:44:02] 
+
+****
+Post-condition Violation
+Element 'M' not found
+Violation occurred on line 93 in file D:\bld\rdkit-meta_1764390771766\work\Code\GraphMol\PeriodicTable.h
+Failed Expression: anum > -1
+****
+
+[08:44:02] 
+
+****
+Post-condition Violation
+Element 'M' not found
+Violation occurred on line 93 in file D:\bld\rdkit-meta_1764390771766\work\Code\GraphMol\PeriodicTable.h
+Failed Expression: anum > -1
+****
+
+[08:44:02] 
+
+****
+Post-condition Violation
+Element 'M' not found
+Violation occurred on line 93 in file D:\bld\rdkit-meta_1764390771766\work\Code\GraphMol\PeriodicTable.h
+Failed Expression: anum > -1
+****
+
+

@@ -173,9 +173,15 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+# pyCSRML: large CLinventory concordance matrix caches (auto-generated)
+tests/test_data/*_cache.npz
+
 # Cursor  
 #  Cursor is an AI-powered code editor.`.cursorignore` specifies files/directories to 
 #  exclude from AI features like autocomplete and code analysis. Recommended for sensitive data
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+tests/test_data/*.zip
+tests/test_data/clinventory_molecules.*

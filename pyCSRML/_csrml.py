@@ -698,6 +698,77 @@ def _parse_molecule(mol_el) -> Optional[dict]:
 
 
 # ---------------------------------------------------------------------------
+# SMARTS overrides: hand-crafted patterns for features the parser ignores.
+# keyed by subgraph label; applied at the end of parse_subgraph().
+# Fixes:
+#   - elementGroup (metal/noble-gas): ignored → atom becomes wildcard *
+#   - fragmentElementCount (tetrazine/triazine): ring-N counts lost → any 6-ring
+#   - aliphaticAtom on C=C / C=N: RDKit aromatic model differs from ChemoTyper
+# ---------------------------------------------------------------------------
+
+# Group 1+2 metals (excl. H): Li Be Na Mg K Ca Rb Sr Cs Ba Fr Ra
+_M_GRP12 = "[#3,#4,#11,#12,#19,#20,#37,#38,#55,#56,#87,#88]"
+
+# Group 3 column: Sc Y | La–Lu (lanthanides) | Ac–Lr (actinides, capped at #103)
+_M_GRP3 = (
+    "[#21,#39"
+    ",#57,#58,#59,#60,#61,#62,#63,#64,#65,#66,#67,#68,#69,#70,#71"
+    ",#89,#90,#91,#92,#93,#94,#95,#96,#97,#98,#99,#100,#101,#102,#103]"
+)
+
+# Poor metals (groups 13–16, metallic only): Al Ga In Sn Tl Pb Bi Po
+_M_POOR = "[#13,#31,#49,#50,#81,#82,#83,#84]"
+
+# Transition metals (groups 3–12, all periods including lanthanides La–Lu as
+# group-3 and actinides Ac–Lr as group-3, capped at #103)
+_M_TRANS = (
+    "[#21,#22,#23,#24,#25,#26,#27,#28,#29,#30"
+    ",#39,#40,#41,#42,#43,#44,#45,#46,#47,#48"
+    ",#57,#58,#59,#60,#61,#62,#63,#64,#65,#66,#67,#68,#69,#70,#71"
+    ",#72,#73,#74,#75,#76,#77,#78,#79,#80"
+    ",#89,#90,#91,#92,#93,#94,#95,#96,#97,#98,#99,#100,#101,#102,#103]"
+)
+
+_SMARTS_OVERRIDES: dict[str, str] = {
+    # -- elementGroup: atom patterns ----------------------------------------
+    "atom:element_metal_group_I_II": _M_GRP12,
+    "atom:element_metal_group_III": _M_GRP3,
+    "atom:element_noble_gas": "[#2,#10,#18,#36,#54,#86]",
+    "atom:element_metal_poor_metal": _M_POOR,
+    "atom:element_metal_transistion_metal": _M_TRANS,
+    # -- elementGroup: bond patterns -----------------------------------------
+    "bond:metal_group_I_II_oxo": _M_GRP12 + "=[#8]",
+    "bond:metal_group_I_II_oxy": _M_GRP12 + "-[#8]",
+    "bond:metal_group_III_other_generic": _M_POOR + "~*",
+    "bond:metal_group_III_other_generic_oxo": _M_POOR + "=[#8]",
+    "bond:metal_group_III_other_generic_oxy": _M_POOR + "-[#8]",
+    "bond:metal_transition_oxo": _M_TRANS + "=[#8]",
+    "bond:metal_transition_oxy": _M_TRANS + "-[#8]",
+    # -- fragmentElementCount: ring-nitrogen-count patterns ------------------
+    # Tetrazine: exactly 2 C + 4 N in a 6-membered ring.  Three isomers:
+    # 1,2,3,4- (adjacent Cs), 1,2,3,5- (C-N-C...N3), 1,2,4,5- (C-NN-C-NN).
+    "ring:hetero_[6]_N_tetrazine_generic": (
+        "[$([#6]1~[#6]~[#7]~[#7]~[#7]~[#7]~1)"
+        ",$([#6]1~[#7]~[#6]~[#7]~[#7]~[#7]~1)"
+        ",$([#6]1~[#7]~[#7]~[#6]~[#7]~[#7]~1)]"
+    ),
+    # Triazine: exactly 3 C + 3 N in a 6-membered ring.  Three isomers:
+    # 1,2,3- (adjacent Ns), 1,2,4- (two adj + one lone N), 1,3,5- (alternate).
+    "ring:hetero_[6]_N_triazine_generic": (
+        "[$([#6]1~[#6]~[#6]~[#7]~[#7]~[#7]~1)"
+        ",$([#6]1~[#6]~[#7]~[#7]~[#6]~[#7]~1)"
+        ",$([#6]1~[#7]~[#6]~[#7]~[#6]~[#7]~1)]"
+    ),
+    # -- aliphaticAtom: TxP_PFAS patterns with RDKit aromaticity mismatch ----
+    # Explicit bond types (- and =) already exclude purely aromatic systems,
+    # so removing the ;A (aliphaticAtom) atom constraint is safe and fixes
+    # false negatives on fluorinated heterocycles perceived as aromatic by RDKit.
+    "pfas_chain:alkeneLinear_mono-ene_ethylene_generic_F": "[#9]-[#6]=[#6]",
+    "pfas_bond:C=N_imine_FCN": "[#9]-[#6]-[#6]=[#7;H0,H1]",
+}
+
+
+# ---------------------------------------------------------------------------
 # Parse a single <subgraph> element → metadata + SMARTS
 # ---------------------------------------------------------------------------
 
@@ -783,6 +854,11 @@ def parse_subgraph(sg_el) -> dict:
         ex_smarts = _graph_to_smarts(ex_mol["atoms"], ex_mol["bonds"])
         if ex_smarts:
             exception_smarts.append(ex_smarts)
+
+    # Apply hand-crafted overrides for known-broken patterns
+    if label in _SMARTS_OVERRIDES:
+        smarts = _SMARTS_OVERRIDES[label]
+        exception_smarts = []
 
     return {
         "id": sg_id,

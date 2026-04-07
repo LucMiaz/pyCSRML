@@ -16,6 +16,9 @@ Concordance with the reference ChemoTyper tool:
   711 / 729 bits ≥ 90 %) for ToxPrint v2.0.
 * **99.98 %** overall accuracy on the ToxCast CF-containing subset (808 compounds,
   all 129 bits ≥ 90 %) for TxP_PFAS v1.0.
+* **CLinventory** (pharmaceutical/industrial chemical set) — ToxPrint v2.0 and
+  TxP_PFAS v1.0 results are generated automatically when running the test suite;
+  see ``tests/concordance_report.md`` for the latest figures.
 
 Run ``pytest tests/test_chemotyper_concordance.py -v -s`` to reproduce;
 results (including per-bit MCC, balanced accuracy, and ROC-AUC) are written to
@@ -35,6 +38,7 @@ under the *Known discrepancies* heading.
 
    installation
    quickstart
+   benchmarks
    csrml_format
    json_yaml_format
 

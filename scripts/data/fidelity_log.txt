@@ -1,0 +1,47 @@
+ChemoTyper cache : chemotyper_toxprint_cache_512668ca64d9.npy
+pyCSRML cache    : pycsrml_toxprint_cache_512668ca64d9.npy
+Shapes: CT=(9014, 729), PY=(9014, 729)
+
+Per-compound Tanimoto similarity: n=9014, mean=0.4680, sd=0.1177, p0=0.0000, p1=0.1855, p5=0.2692, p25=0.3913, p50=0.4688, p75=0.5556, p95=0.6522, p99=0.7059, p100=0.7937
+  Identical (T=1.0) :      0 / 9014 (0.00%)
+  T < 0.99          :   9014 / 9014 (100.00%)
+  T < 0.95          :   9014 / 9014 (100.00%)
+
+Overall bit accuracy (all compounds ├ù bits): 0.981554 (98.1554%)
+
+Per-bit accuracy distribution (729 bits):
+  Perfect (acc=1.0) :  501 / 729
+  acc >= 0.99       :  683 / 729 (93.7%)
+  acc >= 0.95       :  707 / 729 (97.0%)
+  acc < 0.99        :   46 / 729
+  Loaded 729 bit names from TSV header
+
+Per-bit accuracy saved to C:\Users\luc\git\pyCSRML\scripts\data\toxcast_per_bit_accuracy.csv
+
+Lowest accuracy bits (top 20):
+Bit name                                                       Accuracy  CT prev  PY prev
+------------------------------------------------------------------------------------------
+atom:element_noble_gas                                           0.0000   0.0000   1.0000
+atom:element_metal_group_III                                     0.0011   0.0011   1.0000
+atom:element_metal_poor_metal                                    0.0051   0.0051   1.0000
+bond:metal_group_III_other_generic                               0.0053   0.0040   0.9987
+atom:element_metal_transistion_metal                             0.0116   0.0116   1.0000
+atom:element_metal_group_I_II                                    0.0504   0.0504   1.0000
+ring:hetero_[6]_N_tetrazine_generic                              0.3039   0.0002   0.6964
+ring:hetero_[6]_N_triazine_generic                               0.3179   0.0143   0.6964
+bond:metal_group_I_II_oxy                                        0.3199   0.0000   0.6801
+bond:metal_transition_oxy                                        0.3207   0.0008   0.6801
+bond:metal_group_III_other_generic_oxy                           0.3215   0.0016   0.6801
+bond:metal_group_I_II_oxo                                        0.3606   0.0000   0.6394
+bond:metal_group_III_other_generic_oxo                           0.3610   0.0004   0.6394
+bond:metal_transition_oxo                                        0.3611   0.0006   0.6394
+ring:hetero_[6]_Z_generic                                        0.5462   0.2425   0.6964
+chain:alkaneBranch_isopropyl_C3                                  0.7414   0.1162   0.3748
+chain:alkaneCyclic_ethyl_C2_(connect_noZ)                        0.7592   0.1766   0.4175
+chain:alkeneCyclic_ethene_generic                                0.8695   0.1030   0.1735
+chain:alkeneCyclic_ethene_C_(connect_noZ)                        0.9049   0.0576   0.1389
+bond:quatN_b-carbonyl                                            0.9334   0.0007   0.0672
+
+Markdown report written to C:\Users\luc\git\pyCSRML\scripts\data\fingerprint_fidelity_report.md
+Per-compound Tanimoto saved to C:\Users\luc\git\pyCSRML\scripts\data\toxcast_per_compound_tanimoto.csv
+

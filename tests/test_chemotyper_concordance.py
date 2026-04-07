@@ -20,6 +20,7 @@ Run with:
 
 import os
 import sys
+import json
 
 import numpy as np
 import pandas as pd
@@ -41,8 +42,16 @@ SMI_PATH         = os.path.join(DATA_DIR, "toxcast_smiles.smi")
 TOXPRINT_TSV     = os.path.join(DATA_DIR, "toxprint_V2.tsv")
 TXPPFAS_TSV      = os.path.join(DATA_DIR, "TxP_PFAS_v1.tsv")
 
+# CLinventory baseline files (ChemoTyper output vs CLinventory molecules)
+CLINVENTORY_SMI_PATH     = os.path.join(DATA_DIR, "clinventory_molecules.smiles")
+CLINVENTORY_TOXPRINT_ZIP = os.path.join(DATA_DIR, "toxprint_V2_vs_clinventory_molecules.zip")
+CLINVENTORY_TXPPFAS_ZIP  = os.path.join(DATA_DIR, "TxP_PFAS_v1_vs_clinventory_molecules.zip")
+
 
 REPORT_PATH = os.path.join(os.path.dirname(__file__), "concordance_report.md")
+CLINVENTORY_BIT_BASELINE_PATH = os.path.join(
+    os.path.dirname(__file__), "clinventory_bit_accuracy_baseline.json"
+)
 
 
 # ---------------------------------------------------------------------------
@@ -102,6 +111,39 @@ def toxprint_tsv_df():
 def txppfas_tsv_df():
     """9014 × 129 TxP_PFAS reference; M_READ_ERROR becomes index via index_col=0."""
     return pd.read_csv(TXPPFAS_TSV, sep="\t", index_col=0)
+
+
+@pytest.fixture(scope="module")
+def clinventory_smiles():
+    """SMILES for the CLinventory molecules (same row order as the ChemoTyper TSV)."""
+    if not os.path.exists(CLINVENTORY_SMI_PATH):
+        pytest.skip(f"CLinventory SMILES file not found: {CLINVENTORY_SMI_PATH}")
+    with open(CLINVENTORY_SMI_PATH, encoding="utf-8") as fh:
+        return [line.strip() for line in fh if line.strip()]
+
+
+@pytest.fixture(scope="module")
+def clinventory_toxprint_df():
+    """ChemoTyper ToxPrint reference for CLinventory molecules (from zip).
+
+    The zip archive must contain a single ``.tsv`` file; pandas reads it
+    automatically via its built-in zip-decompression support.
+    """
+    if not os.path.exists(CLINVENTORY_TOXPRINT_ZIP):
+        pytest.skip(f"CLinventory ToxPrint zip not found: {CLINVENTORY_TOXPRINT_ZIP}")
+    return pd.read_csv(CLINVENTORY_TOXPRINT_ZIP, sep="\t", index_col=0, compression="zip")
+
+
+@pytest.fixture(scope="module")
+def clinventory_txppfas_df():
+    """ChemoTyper TxP_PFAS reference for CLinventory molecules (from zip).
+
+    Skips silently when ``txppfas_v1_vs_clinventory_molecules.zip`` has not
+    yet been placed in ``tests/test_data/``.
+    """
+    if not os.path.exists(CLINVENTORY_TXPPFAS_ZIP):
+        pytest.skip(f"CLinventory TxP_PFAS zip not found: {CLINVENTORY_TXPPFAS_ZIP}")
+    return pd.read_csv(CLINVENTORY_TXPPFAS_ZIP, sep="\t", index_col=0, compression="zip")
 
 
 # ---------------------------------------------------------------------------
@@ -366,7 +408,14 @@ def _compute_concordance_from_arrays(fp_obj, smiles_list, ref_df, row_mask=None)
 
     n_failed = len(smiles_subset) - len(mols)
     pred_matrix = fp_obj.fingerprint_batch(mols).astype(int)
-    ref_matrix = ref_subset.iloc[valid_local_idx][bit_names].to_numpy(dtype=int)
+    # reindex ensures all expected bits are present even if ChemoTyper omitted
+    # zero-valued columns from its export
+    ref_matrix = (
+        ref_subset
+        .reindex(columns=bit_names, fill_value=0)
+        .iloc[valid_local_idx]
+        .to_numpy(dtype=int)
+    )
     return pred_matrix, ref_matrix, bit_names, n_failed
 
 
@@ -408,6 +457,102 @@ def _compute_extra_metrics(pred: "np.ndarray", ref: "np.ndarray") -> dict:
         "macro_balanced_acc": float(np.nanmean(bal_acc)),
         "macro_roc_auc": float(np.nanmean(roc_auc)),
     }
+
+
+# ---------------------------------------------------------------------------
+# CLinventory cache helpers
+# ---------------------------------------------------------------------------
+
+def _clinv_cache_path(zip_path: str) -> str:
+    """Derive `.npz` cache path from a zip file path (placed alongside in DATA_DIR)."""
+    base = os.path.splitext(os.path.basename(zip_path))[0]
+    return os.path.join(os.path.dirname(zip_path), f"_{base}_cache.npz")
+
+
+def _load_clinv_cache(cache_path: str, zip_path: str):
+    """Return (pred, ref, bit_names, n_failed) from cache, or None if stale/absent."""
+    if not os.path.exists(cache_path):
+        return None
+    try:
+        data = np.load(cache_path, allow_pickle=True)
+        if abs(float(data["source_mtime"]) - os.path.getmtime(zip_path)) > 1.0:
+            return None
+        return (
+            data["pred"].astype(int),
+            data["ref"].astype(int),
+            list(data["bit_names"]),
+            int(data["n_failed"]),
+        )
+    except Exception:
+        return None
+
+
+def _save_clinv_cache(cache_path: str, zip_path: str, pred, ref, bit_names, n_failed):
+    """Save concordance matrices to a compressed .npz with mtime stamp."""
+    np.savez_compressed(
+        cache_path,
+        pred=pred.astype(np.int8),
+        ref=ref.astype(np.int8),
+        bit_names=np.array(bit_names),
+        n_failed=np.array(n_failed),
+        source_mtime=np.array(os.path.getmtime(zip_path)),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Per-bit accuracy baseline helpers
+# ---------------------------------------------------------------------------
+
+def _load_bit_baseline() -> dict:
+    """Load per-bit accuracy baseline from JSON, or return empty dict."""
+    if not os.path.exists(CLINVENTORY_BIT_BASELINE_PATH):
+        return {}
+    with open(CLINVENTORY_BIT_BASELINE_PATH, encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def _save_bit_baseline(baselines: dict) -> None:
+    """Persist per-bit accuracy baseline to JSON."""
+    with open(CLINVENTORY_BIT_BASELINE_PATH, "w", encoding="utf-8") as fh:
+        json.dump(baselines, fh, indent=2, sort_keys=True)
+
+
+def _assert_per_bit_no_regression(
+    bit_names: list,
+    bit_acc: "np.ndarray",
+    baselines: dict,
+    baseline_key: str,
+    tolerance: float = 0.002,
+) -> None:
+    """Check stored per-bit accuracies and assert no regression > *tolerance*.
+
+    On first call (key absent from baselines) the current values are written
+    as the new baseline and the assertion passes.
+    Collect all failures before raising so the full picture is shown at once.
+    """
+    if baseline_key not in baselines:
+        baselines[baseline_key] = {n: float(a) for n, a in zip(bit_names, bit_acc)}
+        _save_bit_baseline(baselines)
+        print(f"\n[baseline] Wrote new per-bit accuracy baseline for '{baseline_key}'")
+        return
+
+    stored = baselines[baseline_key]
+    failures = []
+    for name, current in zip(bit_names, bit_acc):
+        prev = stored.get(name, 0.0)
+        if current < prev - tolerance:
+            failures.append(
+                f"  {name}: {prev:.4f} -> {current:.4f}  (dropped {prev - current:.4f})"
+            )
+    if failures:
+        pytest.fail(
+            f"\n{len(failures)} bit(s) regressed by more than {tolerance:.3f} "
+            f"on CLinventory (baseline key '{baseline_key}'):\n"
+            + "\n".join(failures)
+            + "\n\nTo reset the baseline delete "
+            "tests/clinventory_bit_accuracy_baseline.json, "
+            "or re-run with --recompute-clinventory to update it."
+        )
 
 
 def _print_concordance_report(pred, ref, bit_names, title, capsys):
@@ -653,3 +798,172 @@ def test_txppfas_concordance_tsv(fp, toxcast_smiles, txppfas_tsv_df, capsys):
     assert overall_cf >= 0.90, f"Overall accuracy {overall_cf:.4f} below 0.90"
     pct = (bit_acc_cf >= 0.70).mean()
     assert pct >= 0.85, f"Only {pct*100:.1f}% of bits have >=70% accuracy (threshold: 85%)"
+
+
+# ---------------------------------------------------------------------------
+# CLinventory baseline concordance
+# ---------------------------------------------------------------------------
+
+def test_toxprint_concordance_clinventory(
+    request, fp_toxprint, clinventory_smiles, clinventory_toxprint_df, capsys
+):
+    """ToxPrintFingerprinter vs toxprint_V2_vs_clinventory_molecules.zip.
+
+    On the first run (or when --recompute-clinventory is passed) the full
+    fingerprinting is performed and results cached to a .npz file alongside
+    the zip.  Subsequent runs load from cache (fast).  Per-bit accuracy for
+    all 729 bits is checked against a JSON baseline; the test fails if ANY
+    bit regresses by more than 0.2 pp.
+    """
+    recompute = request.config.getoption("--recompute-clinventory", default=False)
+    cache_path = _clinv_cache_path(CLINVENTORY_TOXPRINT_ZIP)
+
+    result = None if recompute else _load_clinv_cache(cache_path, CLINVENTORY_TOXPRINT_ZIP)
+    if result is not None:
+        pred, ref, bit_names, n_failed = result
+        with capsys.disabled():
+            print(f"\n[cache] Loaded CLinventory ToxPrint matrices from {cache_path}")
+    else:
+        pred, ref, bit_names, n_failed = _compute_concordance_from_arrays(
+            fp_toxprint, clinventory_smiles, clinventory_toxprint_df
+        )
+        _save_clinv_cache(cache_path, CLINVENTORY_TOXPRINT_ZIP, pred, ref, bit_names, n_failed)
+        with capsys.disabled():
+            print(f"[cache] Saved CLinventory ToxPrint cache to {cache_path}")
+
+    with capsys.disabled():
+        print(f"\n[info] CLinventory ToxPrint — SMILES parse failures: {n_failed}")
+    overall_acc, bit_acc, precision, recall = _print_concordance_report(
+        pred, ref, bit_names,
+        f"ChemoTyper concordance — ToxPrint V2 (CLinventory, {pred.shape[0]} mols)",
+        capsys,
+    )
+
+    f1_denom = precision + recall
+    f1 = np.where(f1_denom > 0, 2 * precision * recall / f1_denom, np.nan)
+    extra = _compute_extra_metrics(pred, ref)
+
+    _save_concordance_report(
+        dataset_name=f"ToxPrint V2 — CLinventory ({pred.shape[0]} compounds)",
+        n_compounds=pred.shape[0],
+        n_failed=n_failed,
+        overall_acc=overall_acc,
+        bit_acc=bit_acc,
+        bit_names=bit_names,
+        precision=precision,
+        recall=recall,
+        f1=f1,
+        report_path=REPORT_PATH,
+        append=True,
+        extra=extra,
+    )
+    with capsys.disabled():
+        print(f"[info] Concordance report updated at {REPORT_PATH}")
+
+    # Per-bit regression check (all 729 bits)
+    baselines = _load_bit_baseline()
+    _assert_per_bit_no_regression(bit_names, bit_acc, baselines, "toxprint_clinventory")
+    assert overall_acc >= 0.90, f"Overall accuracy {overall_acc:.4f} below 0.90"
+
+
+
+def test_txppfas_concordance_clinventory(
+    request, fp, clinventory_smiles, clinventory_txppfas_df, capsys
+):
+    """PFASFingerprinter vs txppfas_v1_vs_clinventory_molecules.zip.
+
+    Skips automatically if the zip file is not yet present in
+    ``tests/test_data/``.  On the first run (or with --recompute-clinventory)
+    the full fingerprinting is performed and results cached to a .npz file.
+    Subsequent runs load from cache (fast).  Per-bit accuracy for all 129 bits
+    is checked against a JSON baseline.
+    """
+    recompute = request.config.getoption("--recompute-clinventory", default=False)
+    cache_path = _clinv_cache_path(CLINVENTORY_TXPPFAS_ZIP)
+
+    result = None if recompute else _load_clinv_cache(cache_path, CLINVENTORY_TXPPFAS_ZIP)
+    if result is not None:
+        pred, ref, bit_names, n_failed = result
+        with capsys.disabled():
+            print(f"\n[cache] Loaded CLinventory TxP_PFAS matrices from {cache_path}")
+    else:
+        pred, ref, bit_names, n_failed = _compute_concordance_from_arrays(
+            fp, clinventory_smiles, clinventory_txppfas_df
+        )
+        _save_clinv_cache(cache_path, CLINVENTORY_TXPPFAS_ZIP, pred, ref, bit_names, n_failed)
+        with capsys.disabled():
+            print(f"[cache] Saved CLinventory TxP_PFAS cache to {cache_path}")
+
+    with capsys.disabled():
+        print(f"\n[info] CLinventory TxP_PFAS — SMILES parse failures: {n_failed}")
+
+    # CF-containing subset report (informational)
+    cf_mask = np.array(
+        (clinventory_txppfas_df.values > 0).any(axis=1), dtype=bool
+    )
+    n_cf = int(cf_mask.sum())
+    with capsys.disabled():
+        print(f"[info] CLinventory CF-containing compounds: {n_cf} / {len(clinventory_smiles)}")
+
+    # -- Full-set results (primary assertion) ----------------------------
+    overall_acc, bit_acc, precision, recall = _print_concordance_report(
+        pred, ref, bit_names,
+        f"ChemoTyper concordance — TxP_PFAS v1 (CLinventory full, {pred.shape[0]} mols)",
+        capsys,
+    )
+    f1_denom = precision + recall
+    f1 = np.where(f1_denom > 0, 2 * precision * recall / f1_denom, np.nan)
+    extra = _compute_extra_metrics(pred, ref)
+    _save_concordance_report(
+        dataset_name=f"TxP\\_PFAS v1 — CLinventory ({pred.shape[0]} compounds)",
+        n_compounds=pred.shape[0],
+        n_failed=n_failed,
+        overall_acc=overall_acc,
+        bit_acc=bit_acc,
+        bit_names=bit_names,
+        precision=precision,
+        recall=recall,
+        f1=f1,
+        report_path=REPORT_PATH,
+        append=True,
+        extra=extra,
+    )
+
+    # -- CF-containing subset (informational, reported separately) -------
+    if n_cf > 0:
+        pred_cf, ref_cf, _bn, n_failed_cf = _compute_concordance_from_arrays(
+            fp, clinventory_smiles, clinventory_txppfas_df, row_mask=cf_mask
+        )
+        overall_cf, bit_acc_cf, prec_cf, rec_cf = _print_concordance_report(
+            pred_cf, ref_cf, bit_names,
+            f"ChemoTyper concordance — TxP_PFAS v1 (CLinventory CF-subset, {pred_cf.shape[0]} mols)",
+            capsys,
+        )
+        f1_denom_cf = prec_cf + rec_cf
+        f1_cf = np.where(f1_denom_cf > 0, 2 * prec_cf * rec_cf / f1_denom_cf, np.nan)
+        extra_cf = _compute_extra_metrics(pred_cf, ref_cf)
+        _save_concordance_report(
+            dataset_name=(
+                f"TxP\\_PFAS v1 — CLinventory CF-containing subset "
+                f"({pred_cf.shape[0]} compounds, informational)"
+            ),
+            n_compounds=pred_cf.shape[0],
+            n_failed=n_failed_cf,
+            overall_acc=overall_cf,
+            bit_acc=bit_acc_cf,
+            bit_names=bit_names,
+            precision=prec_cf,
+            recall=rec_cf,
+            f1=f1_cf,
+            report_path=REPORT_PATH,
+            append=True,
+            extra=extra_cf,
+        )
+
+    with capsys.disabled():
+        print(f"[info] Concordance report updated at {REPORT_PATH}")
+
+    # Per-bit regression check (all 129 bits)
+    baselines = _load_bit_baseline()
+    _assert_per_bit_no_regression(bit_names, bit_acc, baselines, "txppfas_clinventory")
+    assert overall_acc >= 0.90, f"Overall accuracy {overall_acc:.4f} below 0.90"

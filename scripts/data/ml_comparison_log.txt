@@ -1,0 +1,9 @@
+Loaded 150 fold rows, 15 endpoints, 2 feature sets.
+
+ROC-AUC: global ╬ö = -0.0017  95% CrI [-0.0037, 0.0002]  P(╬ö>0)=0.043  Wilcoxon p=0.0318
+Avg. Precision: global ╬ö = -0.0059  95% CrI [-0.0084, -0.0035]  P(╬ö>0)=0.000  Wilcoxon p=0.0000
+MCC: global ╬ö = -0.0064  95% CrI [-0.0106, -0.0021]  P(╬ö>0)=0.002  Wilcoxon p=0.0055
+Balanced Acc.: global ╬ö = -0.0022  95% CrI [-0.0041, -0.0002]  P(╬ö>0)=0.015  Wilcoxon p=0.0498
+
+Report written to C:\Users\luc\git\pyCSRML\scripts\data\ml_comparison_report.md
+
