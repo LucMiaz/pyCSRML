@@ -185,3 +185,4 @@ tests/test_data/*_cache.npz
 
 tests/test_data/*.zip
 tests/test_data/clinventory_molecules.*
+.history/*

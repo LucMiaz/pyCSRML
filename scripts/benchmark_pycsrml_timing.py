@@ -142,13 +142,13 @@ def main(argv=None):
     print(f"Found {len(sets)} benchmark set(s): {', '.join(sets)}")
     print(f"Timing with {args.reps} repetitions per (set × fingerprinter).\n")
 
-    # Import once (loads XML definitions — cost paid once)
-    from pyCSRML import PFASFingerprinter, ToxPrintFingerprinter
+    # Import once (loads bundled JSON definitions — cost paid once)
+    from pyCSRML import Fingerprinter, TOXPRINT_PATH, TXPPFAS_PATH
 
-    print("Initialising fingerprinters (loads XML definitions)…")
+    print("Initialising fingerprinters (loads bundled JSON definitions)…")
     fp_map = {
-        "ToxPrint_V2":  ToxPrintFingerprinter(),
-        "TxP_PFAS_v1":  PFASFingerprinter(),
+        "ToxPrint_V2":  Fingerprinter(TOXPRINT_PATH),
+        "TxP_PFAS_v1":  Fingerprinter(TXPPFAS_PATH),
     }
     print("  Done.\n")
 

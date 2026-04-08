@@ -42,10 +42,18 @@ from typing import Optional, Union
 import numpy as np
 
 _DATA_DIR = Path(__file__).parent / "data"
-_TOXPRINT_XML = _DATA_DIR / "toxprint_V2.0_r711.xml"
-_TXPPFAS_XML = _DATA_DIR / "TxP_PFAS_v1.0.4.xml"
-_TOXPRINT_JSON = _DATA_DIR / "toxprint_V2.0_r711.json"
-_TXPPFAS_JSON = _DATA_DIR / "TxP_PFAS_v1.0.4.json"
+
+#: Path to the bundled ToxPrint v2.0 JSON fingerprint definition.
+#: Pass this to :class:`Fingerprinter` to load ToxPrint instantly::
+#:
+#:     fp = Fingerprinter(TOXPRINT_PATH)
+TOXPRINT_PATH: Path = _DATA_DIR / "toxprint_V2.0_r711.json"
+
+#: Path to the bundled TxP_PFAS v1.0.4 JSON fingerprint definition.
+#: Pass this to :class:`Fingerprinter` to load TxP_PFAS instantly::
+#:
+#:     fp = Fingerprinter(TXPPFAS_PATH)
+TXPPFAS_PATH: Path = _DATA_DIR / "TxP_PFAS_v1.0.4.json"
 
 
 # ---------------------------------------------------------------------------
@@ -356,51 +364,4 @@ class Fingerprinter:
         return np.vstack(results) if results else np.empty((0, self._n_bits), dtype=bool)
 
 
-# ---------------------------------------------------------------------------
-# Convenience subclasses
-# ---------------------------------------------------------------------------
 
-class ToxPrintFingerprinter(Fingerprinter):
-    """
-    ToxPrint v2.0 fingerprinter (729 chemotype bits).
-
-    Parameters
-    ----------
-    source : str or Path, optional
-        Path to a ToxPrint definition file (.xml, .json, or .yaml).
-        Defaults to the bundled ToxPrint v2.0 XML and its pre-built JSON cache.
-    """
-
-    def __init__(
-        self,
-        source: Optional[Union[str, Path]] = None,
-        verbose: bool = False,
-        # backward-compat alias
-        xml_path: Optional[Union[str, Path]] = None,
-    ):
-        src = Path(source or xml_path or _TOXPRINT_XML)
-        jp = _TOXPRINT_JSON if src == _TOXPRINT_XML else None
-        super().__init__(source=src, json_cache=jp, verbose=verbose)
-
-
-class PFASFingerprinter(Fingerprinter):
-    """
-    TxP_PFAS v1.0.4 fingerprinter (129 PFAS-specific chemotype bits).
-
-    Parameters
-    ----------
-    source : str or Path, optional
-        Path to a TxP_PFAS definition file (.xml, .json, or .yaml).
-        Defaults to the bundled TxP_PFAS v1.0.4 XML and its pre-built JSON cache.
-    """
-
-    def __init__(
-        self,
-        source: Optional[Union[str, Path]] = None,
-        verbose: bool = False,
-        # backward-compat alias
-        xml_path: Optional[Union[str, Path]] = None,
-    ):
-        src = Path(source or xml_path or _TXPPFAS_XML)
-        jp = _TXPPFAS_JSON if src == _TXPPFAS_XML else None
-        super().__init__(source=src, json_cache=jp, verbose=verbose)

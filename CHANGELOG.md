@@ -16,9 +16,8 @@ Initial module.
 
 ### Added
 - Parse CSRML XML (ToxPrint v2 and TxP_PFAS v1) to SMARTS
-- Bundled fingerprint definitions: ToxPrint v2.0 (729 bits), TxP_PFAS v1.0.4 (129 bits)
-- `PFASFingerprinter` and `ToxPrintFingerprinter` classes using RDKit
-- `Embedding` and `EmbeddingSet` containers for multi-compound analysis
+- Bundled fingerprint definitions: ToxPrint v2.0 (729 bits) and TxP\_PFAS v1.0.4 (129 bits), accessible via `TOXPRINT_PATH` and `TXPPFAS_PATH`
+- `Fingerprinter` class using RDKit; accepts XML, JSON, or YAML definitions
 - Full support for all key CSRML atom features (pseudo-elements G/Z/Q/X, negated atomList,
   H-count ranges, combineAtomFeatures OR-of-AND trees, matchingQueryAtom folding,
   atomHeteroAttachedCount via recursive SMARTS)

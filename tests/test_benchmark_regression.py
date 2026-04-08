@@ -135,14 +135,14 @@ def _run_timed(fp_obj, mols: list, n_reps: int) -> float:
 
 @pytest.fixture(scope="module")
 def fp_toxprint():
-    from pyCSRML import ToxPrintFingerprinter
-    return ToxPrintFingerprinter()
+    from pyCSRML import Fingerprinter, TOXPRINT_PATH
+    return Fingerprinter(TOXPRINT_PATH)
 
 
 @pytest.fixture(scope="module")
 def fp_pfas():
-    from pyCSRML import PFASFingerprinter
-    return PFASFingerprinter()
+    from pyCSRML import Fingerprinter, TXPPFAS_PATH
+    return Fingerprinter(TXPPFAS_PATH)
 
 
 def _get_fp(fp_name: str, fp_toxprint, fp_pfas):

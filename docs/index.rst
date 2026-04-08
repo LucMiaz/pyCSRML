@@ -3,10 +3,10 @@ pyCSRML documentation
 
 **pyCSRML** is an attempt to provide a pure-Python implementation of the Chemical Subgraph Representation Markup Language (CSRML). It parses CSRML XML files, converts subgraph patterns to SMARTS, and computes binary chemotype fingerprints for molecules using RDKit.
 
-Two fingerprint sets are bundled:
+Two fingerprint sets are bundled and accessible via path constants:
 
-* **ToxPrint v2.0** — 729 general toxicologically-relevant chemotypes
-* **TxP_PFAS v1.0** — 129 per- and polyfluoroalkyl substance (PFAS) chemotypes
+* **ToxPrint v2.0** — 729 general toxicologically-relevant chemotypes (``TOXPRINT_PATH``)
+* **TxP_PFAS v1.0** — 129 per- and polyfluoroalkyl substance (PFAS) chemotypes (``TXPPFAS_PATH``)
 
 Concordance with the reference ChemoTyper tool:
 
@@ -27,11 +27,6 @@ discrepancies (G/Q pseudo-element approximations, RDKit vs ChemoTyper
 aromaticity for fluorinated heterocycles) are documented in ``README.md``
 under the *Known discrepancies* heading.
 
-.. note::
-
-   See ``README.md`` for the performance table and a "Known discrepancies"
-   section explaining systematic differences vs the reference tool.
-
 .. toctree::
    :maxdepth: 2
    :caption: User guide
@@ -47,7 +42,6 @@ under the *Known discrepancies* heading.
    :caption: API reference
 
    api/fingerprinter
-   api/embedding
    api/csrml
 
 .. toctree::

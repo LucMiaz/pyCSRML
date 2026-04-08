@@ -6,14 +6,12 @@ Computing fingerprints for a single molecule
 
 .. code-block:: python
 
-   from pyCSRML import PFASFingerprinter
+   from pyCSRML import Fingerprinter, TOXPRINT_PATH
    from rdkit import Chem
 
-   fp = PFASFingerprinter()   # loads bundled TxP_PFAS v1.0 definitions
+   fp = Fingerprinter(TOXPRINT_PATH)   # loads bundled ToxPrint v2.0 (729 bits)
 
-   mol = Chem.MolFromSmiles(
-       "FC(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(=O)O"  # PFOA
-   )
+   mol = Chem.MolFromSmiles("c1ccccc1")   # benzene
    arr, names = fp.fingerprint(mol)
 
    print(f"Bits set: {arr.sum()} / {fp.n_bits}")
@@ -21,21 +19,47 @@ Computing fingerprints for a single molecule
    print(on_bits[:5])
 
 ``arr`` is a boolean :class:`numpy.ndarray` of length ``fp.n_bits``.
-``names`` is the matching list of chemotype labels (e.g. ``"pfas_chain:perF-linear_C8_plus"``).
+``names`` is the matching list of chemotype labels (e.g. ``"ring:aro_6_C"``).
 
 
-ToxPrint v2 fingerprints
--------------------------
+Using the bundled TxP\_PFAS definition
+---------------------------------------
 
 .. code-block:: python
 
-   from pyCSRML import ToxPrintFingerprinter
+   from pyCSRML import Fingerprinter, TXPPFAS_PATH
    from rdkit import Chem
 
-   fp = ToxPrintFingerprinter()
-   mol = Chem.MolFromSmiles("c1ccccc1")
+   fp = Fingerprinter(TXPPFAS_PATH)   # loads bundled TxP_PFAS v1.0.4 (129 bits)
+
+   mol = Chem.MolFromSmiles(
+       "FC(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(=O)O"  # PFOA
+   )
    arr, names = fp.fingerprint(mol)
-   print(f"Benzene: {arr.sum()} bits")
+   print(f"Bits set: {arr.sum()} / {fp.n_bits}")
+
+
+Batch processing
+----------------
+
+:meth:`~pyCSRML.Fingerprinter.fingerprint_batch` processes a list of molecules
+and returns a 2-D boolean NumPy matrix of shape ``(n_molecules, n_bits)``.
+
+.. code-block:: python
+
+   from pyCSRML import Fingerprinter, TXPPFAS_PATH
+   from rdkit import Chem
+
+   smiles = [
+       "FC(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(=O)O",   # PFOA
+       "FC(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)S(=O)(=O)O",  # PFOS
+       "CCO",     # ethanol (negative control)
+   ]
+   mols = [Chem.MolFromSmiles(s) for s in smiles]
+
+   fp = Fingerprinter(TXPPFAS_PATH)
+   matrix = fp.fingerprint_batch(mols)   # shape (3, 129), dtype bool
+   print(matrix.shape, matrix.dtype)
 
 
 Using a custom CSRML XML file
@@ -48,55 +72,3 @@ Using a custom CSRML XML file
    fp = Fingerprinter("path/to/my_fingerprints.xml")
    mol = Chem.MolFromSmiles("CCO")
    arr, names = fp.fingerprint(mol)
-
-
-Batch processing with EmbeddingSet
-------------------------------------
-
-:class:`~pyCSRML.EmbeddingSet` collects fingerprints for a list of compounds and
-provides analysis helpers.
-
-.. code-block:: python
-
-   from pyCSRML import PFASFingerprinter, from_fingerprinter
-
-   fp = PFASFingerprinter()
-
-   smiles = [
-       "FC(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(=O)O",   # PFOA
-       "FC(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)S(=O)(=O)O",  # PFOS
-       "FCCCF",   # short difluoro
-       "CCO",     # ethanol (negative control)
-   ]
-   names = ["PFOA", "PFOS", "4F-propane", "EtOH"]
-
-   eset = from_fingerprinter(fp, smiles_list=smiles, names=names)
-
-   # Clustermap / heatmap (requires matplotlib)
-   eset.plot(kind="heatmap")
-
-   # Tanimoto similarity matrix
-   sim = eset.similarity_matrix()
-   print(sim)
-
-
-Accessing individual Embeddings
----------------------------------
-
-.. code-block:: python
-
-   emb = eset[0]              # first compound
-   print(emb.name)            # "PFOA"
-   print(emb.array.sum())     # number of set bits
-   print(emb.on_bits())       # list of set bit names
-
-
-Pairwise Tanimoto similarity
------------------------------
-
-.. code-block:: python
-
-   from pyCSRML import Embedding
-
-   sim = emb1.tanimoto(emb2)
-   print(f"Tanimoto(PFOA, PFOS) = {sim:.3f}")

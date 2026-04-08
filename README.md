@@ -77,16 +77,17 @@ to compare pyCSRML speed against ChemoTyper on realistic chemical diversity.
 
 | Set | Heavy atoms | pyCSRML ToxPrint v2 | pyCSRML TxP\_PFAS v1 | ChemoTyper ToxPrint v2 | ChemoTyper TxP\_PFAS v1 |
 |---|---|---|---|---|---|
-| bench\_tiny | 1 – 10 | **3.76** | **0.73** | — | — |
-| bench\_small | 11 – 20 | **5.47** | **1.01** | — | — |
-| bench\_medium | 21 – 35 | **8.23** | **1.53** | — | — |
-| bench\_large | 36 – 60 | **12.32** | **2.19** | — | — |
-| bench\_xlarge | 61 + | **23.20** | **4.46** | — | — |
+| bench\_tiny | 1 – 10 | **3.76** | **0.73** | 13.83 | 4.29 |
+| bench\_small | 11 – 20 | **5.47** | **1.01** | 27.70 | 7.74 |
+| bench\_medium | 21 – 35 | **8.23** | **1.53** | 59.63 | 17.87 |
+| bench\_large | 36 – 60 | **12.32** | **2.19** | 114.64 | 30.53 |
+| bench\_xlarge | 61 + | **23.20** | **4.46** | 322.33 | 139.09 |
 
 pyCSRML measured on **Snapdragon X Elite X1E78100** (ARM64, 12 cores, ~32 GB RAM),
 Python 3.14.2, RDKit 2025.09.3, NumPy 2.3.5; 5 repetitions, median reported.
-500 molecules per set. ChemoTyper reference timing not yet collected (see
-`tests/test_data/size_benchmarks/chemotyper_timing_template.csv`).
+ChemoTyper timings measured manually on the same machine, 3 repetitions, mean reported;
+values are of limited precision due to the manual measurement procedure.
+500 molecules per set.
 
 ### How to reproduce
 
@@ -150,15 +151,15 @@ pip install pyCSRML
 
 ## Quick start
 
-### Single molecule
+### Single molecule (ToxPrint v2.0, 729 bits)
 
 ```python
-from pyCSRML import PFASFingerprinter
+from pyCSRML import Fingerprinter, TOXPRINT_PATH
 from rdkit import Chem
 
-fp = PFASFingerprinter()
+fp = Fingerprinter(TOXPRINT_PATH)
 
-mol = Chem.MolFromSmiles("FC(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(=O)O")  # PFOA
+mol = Chem.MolFromSmiles("c1ccccc1")   # benzene
 arr, names = fp.fingerprint(mol)
 
 print(f"Bits set: {arr.sum()} / {fp.n_bits}")
@@ -166,34 +167,28 @@ on_bits = [names[i] for i in range(len(arr)) if arr[i]]
 print(on_bits[:5])
 ```
 
-### Multiple molecules with analysis
+### TxP\_PFAS fingerprints (129 bits)
 
 ```python
-from pyCSRML import PFASFingerprinter, from_fingerprinter
-
-fp = PFASFingerprinter()
-
-smiles = [
-    "FC(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(=O)O",   # PFOA
-    "FC(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)S(=O)(=O)O",  # PFOS
-    "FCCCF",    # simple difluoro
-    "CCO",      # negative control
-]
-
-eset = from_fingerprinter(fp, smiles_list=smiles, names=["PFOA", "PFOS", "4F-propane", "EtOH"])
-eset.plot(kind="heatmap")
-```
-
-### ToxPrint fingerprints (729 bits)
-
-```python
-from pyCSRML import ToxPrintFingerprinter
+from pyCSRML import Fingerprinter, TXPPFAS_PATH
 from rdkit import Chem
 
-fp = ToxPrintFingerprinter()
-mol = Chem.MolFromSmiles("c1ccccc1")
+fp = Fingerprinter(TXPPFAS_PATH)
+mol = Chem.MolFromSmiles("FC(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(=O)O")  # PFOA
 arr, names = fp.fingerprint(mol)
-print(f"Benzene: {arr.sum()} bits set")
+print(f"Bits set: {arr.sum()} / {fp.n_bits}")
+```
+
+### Batch fingerprinting
+
+```python
+from pyCSRML import Fingerprinter, TXPPFAS_PATH
+from rdkit import Chem
+
+mols = [Chem.MolFromSmiles(s) for s in smiles_list]
+fp = Fingerprinter(TXPPFAS_PATH)
+matrix = fp.fingerprint_batch(mols)   # shape (n_mols, 129), dtype bool
+print(matrix.shape)
 ```
 
 ### Low-level CSRML parsing
@@ -211,14 +206,11 @@ for bit in bits[:3]:
 
 ## API overview
 
-| Class / function | Module | Description |
+| Symbol | Module | Description |
 |---|---|---|
-| `PFASFingerprinter` | `pyCSRML` | 129-bit TxP_PFAS fingerprinter |
-| `ToxPrintFingerprinter` | `pyCSRML` | 729-bit ToxPrint v2 fingerprinter |
-| `Fingerprinter` | `pyCSRML` | Base class; load any CSRML XML or JSON |
-| `Embedding` | `pyCSRML` | Single-compound fingerprint container with metadata |
-| `EmbeddingSet` | `pyCSRML` | Multi-compound container with heatmap / UMAP / clustering |
-| `from_fingerprinter` | `pyCSRML` | Convenience factory: list of SMILES → `EmbeddingSet` |
+| `Fingerprinter` | `pyCSRML` | Compute fingerprints from any CSRML XML, JSON, or YAML definition |
+| `TOXPRINT_PATH` | `pyCSRML` | Path to the bundled ToxPrint v2.0 JSON (729 bits) |
+| `TXPPFAS_PATH` | `pyCSRML` | Path to the bundled TxP\_PFAS v1.0.4 JSON (129 bits) |
 | `parse_csrml_xml` | `pyCSRML._csrml` | Parse raw CSRML XML → Python dict |
 | `ordered_bit_list` | `pyCSRML._csrml` | Return all bits in order from a parsed dict |
 

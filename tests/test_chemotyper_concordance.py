@@ -30,7 +30,7 @@ from rdkit import Chem
 pytestmark = pytest.mark.slow
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from pyCSRML import PFASFingerprinter, ToxPrintFingerprinter
+from pyCSRML import Fingerprinter, TOXPRINT_PATH, TXPPFAS_PATH
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -71,12 +71,12 @@ def _init_concordance_report():
 
 @pytest.fixture(scope="module")
 def fp():
-    return PFASFingerprinter()
+    return Fingerprinter(TXPPFAS_PATH)
 
 
 @pytest.fixture(scope="module")
 def fp_toxprint():
-    return ToxPrintFingerprinter()
+    return Fingerprinter(TOXPRINT_PATH)
 
 
 @pytest.fixture(scope="module")
