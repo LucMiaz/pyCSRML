@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2026-04-07
+
+Improved accuracy on worst bits for both ToxPrint and TxP_PFAS. Renewed performance statistics. Added comparison of endpoint prediction.
+
 ## [0.2.0] - 2026-04-03
 
 Updated documentation and preparation for publication.
