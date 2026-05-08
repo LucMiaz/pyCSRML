@@ -5,10 +5,10 @@ Extract 5 molecule-size-stratified benchmark sets from the CLinventory CSV.
 
 Heavy-atom bins
 ---------------
-  bench_tiny    :   1 –  10 heavy atoms
-  bench_small   :  11 –  20 heavy atoms
-  bench_medium  :  21 –  35 heavy atoms
-  bench_large   :  36 –  60 heavy atoms
+  bench_tiny    :   1 -  10 heavy atoms
+  bench_small   :  11 -  20 heavy atoms
+  bench_medium  :  21 -  35 heavy atoms
+  bench_large   :  36 -  60 heavy atoms
   bench_xlarge  :  61+       heavy atoms
 
 Each set is capped at 500 molecules (keeps ChemoTyper runs practical).
@@ -156,7 +156,7 @@ def print_summary(sets: dict[str, list[dict]]) -> None:
     print(header)
     print("  " + "-" * (len(header) - 2))
     for name, lo, hi in BINS:
-        ha_range = f"{lo}–{hi}" if hi else f"{lo}+"
+        ha_range = f"{lo}-{hi}" if hi else f"{lo}+"
         print(f"  {name:<16} {ha_range:<14} {len(sets[name]):>6}")
     total = sum(len(v) for v in sets.values())
     print(f"  {'TOTAL':<16} {'':<14} {total:>6}")

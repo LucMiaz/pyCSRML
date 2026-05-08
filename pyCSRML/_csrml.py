@@ -709,18 +709,18 @@ def _parse_molecule(mol_el) -> Optional[dict]:
 # Group 1+2 metals (excl. H): Li Be Na Mg K Ca Rb Sr Cs Ba Fr Ra
 _M_GRP12 = "[#3,#4,#11,#12,#19,#20,#37,#38,#55,#56,#87,#88]"
 
-# Group 3 column: Sc Y | La–Lu (lanthanides) | Ac–Lr (actinides, capped at #103)
+# Group 3 column: Sc Y | La-Lu (lanthanides) | Ac-Lr (actinides, capped at #103)
 _M_GRP3 = (
     "[#21,#39"
     ",#57,#58,#59,#60,#61,#62,#63,#64,#65,#66,#67,#68,#69,#70,#71"
     ",#89,#90,#91,#92,#93,#94,#95,#96,#97,#98,#99,#100,#101,#102,#103]"
 )
 
-# Poor metals (groups 13–16, metallic only): Al Ga In Sn Tl Pb Bi Po
+# Poor metals (groups 13-16, metallic only): Al Ga In Sn Tl Pb Bi Po
 _M_POOR = "[#13,#31,#49,#50,#81,#82,#83,#84]"
 
-# Transition metals (groups 3–12, all periods including lanthanides La–Lu as
-# group-3 and actinides Ac–Lr as group-3, capped at #103)
+# Transition metals (groups 3-12, all periods including lanthanides La-Lu as
+# group-3 and actinides Ac-Lr as group-3, capped at #103)
 _M_TRANS = (
     "[#21,#22,#23,#24,#25,#26,#27,#28,#29,#30"
     ",#39,#40,#41,#42,#43,#44,#45,#46,#47,#48"
